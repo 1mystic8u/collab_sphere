@@ -12,6 +12,10 @@ import Chip from 'primevue/chip';
 import Textarea from 'primevue/textarea';
 // Removed InputText as it wasn't used
 
+
+// ai pane component 
+import AiAssistant from '../AiAssistant.vue';
+
 const router = useRouter();
 const route = useRoute();
 const project = ref(null);
@@ -256,6 +260,7 @@ const formatDate = (date) => {
 </script>
 
 <template>
+  <div class="outer_enclose">
     <div class="page-container">
       <!-- Loading State -->
       <div v-if="loading" class="loading-state">
@@ -398,11 +403,35 @@ const formatDate = (date) => {
             </div>
         </div>
 
+        
       </template>
+
+     
+
     </div>
+
+
+    <div class="ai_pane">     
+     <AiAssistant :project="project" v-if="isLoggedIn" />
+    </div>
+  </div>
+
+    
+
 </template>
 
 <style scoped>
+
+.outer_enclose {
+  display: grid;
+  grid-template-columns: 4fr 1fr; /* Single column layout */
+ 
+}
+
+.ai_pane{
+  max-width: 15wv;
+}
+
 .page-container {
   max-width: 900px; /* Or your preferred max width */
   margin: 1rem ;
@@ -411,6 +440,7 @@ const formatDate = (date) => {
   flex-direction: column;
   gap: 1.5rem; /* Spacing between sections */
 }
+
 
 .loading-state, .error-state {
   text-align: center;

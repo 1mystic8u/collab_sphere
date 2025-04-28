@@ -32,6 +32,85 @@ const contributionGuide = ref('');
 const githubService = new GitHubService();
 const genAI = new GoogleGenAI({ apiKey: import.meta.env.VITE_GOOGLE_AI_API_KEY });
 
+
+const formatAIResponseToHTML = (text) =>{
+  if (!text || typeof text !== 'string') {
+    return ''; // Return empty string for null, undefined, or non-string input
+  }
+
+  let html = text;
+
+  html = html.replace(/```(\w*)\n([\s\S]*?)\n```/gs, (match, lang, code) => {
+    const languageClass = lang ? ` class="language-${lang.trim()}"` : '';
+    // Basic escaping for code content display within HTML
+    const escapedCode = code
+        .replace(/&/g, '&') // Must be first
+        .replace(/</g, '<')
+        .replace(/>/g, '>');
+    return `<pre><code${languageClass}>${escapedCode.trim()}</code></pre>`;
+  });
+
+// 4. Inline Code (`...`) - Process before bold/italic to avoid conflict
+  // Use non-greedy match. Need to be careful not to match across ``` blocks if they somehow remain.
+  html = html.replace(/`([^`]+?)`/g, (match, code) => {
+    // Escape HTML within inline code
+    const escapedCode = code
+        .replace(/&/g, '&')
+        .replace(/</g, '<')
+        .replace(/>/g, '>');
+    return `<code>${escapedCode}</code>`;
+   });  
+
+
+
+
+   html = html.replace(/```(?:\w+)?\n([\s\S]*?)\n```/g, (match, code) => {
+  // Escape HTML entities inside the code
+  const escapedCode = code
+    .replace(/&/g, '&amp;') // Important to do first
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+  
+  return `<pre><code>${escapedCode.trim()}</code></pre>`;
+});
+
+  // 2b. Heading 3 (### ...)
+  // Needs 'gm' flags for multiline matching (^) and global replacement.
+  html = html.replace(/^### (.*$)/gm, '<h3>$1</h3>');
+  // 2. Headings (## ...)
+  // Needs 'gm' flags for multiline matching (^) and global replacement.
+  html = html.replace(/^## (.*$)/gm, '<h2>$1</h2>');
+
+
+    //5. Extra Bold (****...****) - Process before regular bold
+  // Use non-greedy match. Applying inline style for stronger emphasis.
+  html = html.replace(/\*\*\*\*(.*?)\*\*\*\*/g, '<strong style="font-weight: 900;">$1</strong>');
+
+  // 3. Bold (**...**)
+  // Replace bold after headings and code blocks. Use non-greedy match (.*?).
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  // 4. Italic (*...*)
+  // Replace italic after bold to prevent conflicts (e.g., matching inside **).
+  html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+
+
+
+
+  // 5. Optional: Convert remaining standalone newlines to <br> tags
+  // Be careful if the AI might intentionally use newlines within paragraphs
+  // that shouldn't be <br>s. This also won't add <p> tags.
+  // It also might incorrectly add <br> if the regexes above leave trailing/leading newlines.
+  // Consider if you really need this step or if CSS white-space: pre-wrap is enough.
+  // html = html.split('\n').map(line => line.trim() === '' ? '' : `<p>${line}</p>`).join(''); // Basic paragraph attempt
+  // Or simpler <br> conversion:
+  // html = html.replace(/\n/g, '<br>\n'); // Add <br> but be careful with <pre>
+
+  return html.trim(); // Trim final whitespace
+};
+
+
 // Function to generate AI suggestions based on project data
 const generateAISuggestions = async () => {
   if (!props.project) return;
@@ -81,11 +160,7 @@ const generateAISuggestions = async () => {
     });
     
     const result = await model;
-    // Replace *text* with <em>text</em>, **text** with <strong>text</strong>, and ***text*** with <strong><em>text</em></strong>
-    let formattedResponse = result.text.replace(/\*{3}(.*?)\*{3}/g, '<strong><em>$1</em></strong>');
-    formattedResponse = formattedResponse.replace(/\*{2}(.*?)\*{2}/g, '<strong>$1</strong>');
-    formattedResponse = formattedResponse.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    aiResponse.value = formattedResponse;
+    aiResponse.value = formatAIResponseToHTML(result.text);
   } catch (error) {
     console.error('Error generating AI suggestions:', error);
     errorMessage.value = `Failed to generate suggestions: ${error.message}`;
@@ -189,12 +264,8 @@ const generateContributionGuide = async (githubData) => {
     });
     
     const result = await model;
-    // Replace *text* with <em>text</em>, **text** with <strong>text</strong>, and ***text*** with <strong><em>text</em></strong>
-    let formattedResponse = result.text.replace(/\*{3}(.*?)\*{3}/g, '<strong><em>$1</em></strong>');
-    formattedResponse = formattedResponse.replace(/\*{2}(.*?)\*{2}/g, '<strong>$1</strong>');
-    formattedResponse = formattedResponse.replace(/\*(.*?)\*/g, '<em>$1</em>');
-    formattedResponse = formattedResponse.replace(/## (.*)/g, '<h2>$1</h2>');
-    contributionGuide.value = formattedResponse;
+
+    contributionGuide.value = formatAIResponseToHTML(result.text);
    
     
     // Automatically switch to the contribution guide tab
@@ -242,13 +313,7 @@ const generateVibeCheck = async () => {
     });
     
     const result = await model;
-
-      // Replace *text* with <em>text</em>, **text** with <strong>text</strong>, and ***text*** with <strong><em>text</em></strong>
-      let formattedResponse = result.text.replace(/\*{3}(.*?)\*{3}/g, '<strong><em>$1</em></strong>');
-      formattedResponse = formattedResponse.replace(/\*{2}(.*?)\*{2}/g, '<strong>$1</strong>');
-      formattedResponse = formattedResponse.replace(/\*(.*?)\*/g, '<em>$1</em>');
-      formattedResponse = formattedResponse.replace(/## (.*)/g, '<h2>$1</h2>');
-      return formattedResponse;
+    return formatAIResponseToHTML(result.text);
     
   } catch (error) {
     console.error('Error generating vibe check:', error);
@@ -335,8 +400,10 @@ const submitCustomPrompt = () => {
                   v-model="customPrompt" 
                   rows="2" 
                   placeholder="E.g., What specific skills should I focus on to contribute?" 
-                  class="w-full mb-2"
+                  style="width: 100%;"
+                  class="mb-2"
                 />
+                <br>
                 <Button 
                   label="Ask" 
                   icon="pi pi-send" 
