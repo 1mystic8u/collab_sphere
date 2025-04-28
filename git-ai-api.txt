@@ -1,0 +1,234 @@
+// src/services/githubService.js
+
+/**
+ * Service for interacting with the GitHub API
+ */
+export default class GitHubService {
+  constructor(token = null) {
+    this.baseUrl = 'https://api.github.com';
+    this.headers = {
+      'Accept': 'application/vnd.github.v3+json'
+    };
+    
+    if (token) {
+      this.headers['Authorization'] = `token ${token}`;
+    }
+  }
+
+  /**
+   * Parse a GitHub URL to extract owner and repo
+   * @param {string} url - GitHub repository URL
+   * @returns {Object} - { owner, repo }
+   */
+  parseGitHubUrl(url) {
+    if (!url) return null;
+    
+    try {
+      // Handle different GitHub URL formats
+      const regex = /github\.com\/([^\/]+)\/([^\/]+)/;
+      const match = url.match(regex);
+      
+      if (match && match.length >= 3) {
+        return {
+          owner: match[1],
+          repo: match[2].replace('.git', '')
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error parsing GitHub URL:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Fetch repository details including README
+   * @param {string} owner - Repository owner
+   * @param {string} repo - Repository name
+   * @returns {Promise} - Repository data
+   */
+  async getRepositoryDetails(owner, repo) {
+    try {
+      const response = await fetch(`${this.baseUrl}/repos/${owner}/${repo}`, {
+        headers: this.headers
+      });
+      
+      if (!response.ok) {
+        throw new Error(`GitHub API error: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error fetching repository details:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch repository README content
+   * @param {string} owner - Repository owner
+   * @param {string} repo - Repository name
+   * @returns {Promise} - README content
+   */
+  async getReadmeContent(owner, repo) {
+    try {
+      const response = await fetch(`${this.baseUrl}/repos/${owner}/${repo}/readme`, {
+        headers: this.headers
+      });
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null; // README doesn't exist
+        }
+        throw new Error(`GitHub API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // GitHub returns the content as base64 encoded
+      if (data.content && data.encoding === 'base64') {
+        return atob(data.content);
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error fetching README:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Fetch repository CONTRIBUTING.md content
+   * @param {string} owner - Repository owner
+   * @param {string} repo - Repository name
+   * @returns {Promise} - CONTRIBUTING.md content
+   */
+  async getContributingContent(owner, repo) {
+    try {
+      // Try to fetch CONTRIBUTING.md directly
+      const response = await fetch(`${this.baseUrl}/repos/${owner}/${repo}/contents/CONTRIBUTING.md`, {
+        headers: this.headers
+      });
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          return null; // CONTRIBUTING.md doesn't exist
+        }
+        throw new Error(`GitHub API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // GitHub returns the content as base64 encoded
+      if (data.content && data.encoding === 'base64') {
+        return atob(data.content);
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error fetching CONTRIBUTING.md:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Fetch beginner-friendly issues
+   * @param {string} owner - Repository owner
+   * @param {string} repo - Repository name
+   * @returns {Promise} - Array of beginner-friendly issues
+   */
+  async getBeginnerFriendlyIssues(owner, repo) {
+    try {
+      // Look for common beginner issue labels
+      const labels = [
+        'good-first-issue',
+        'good first issue',
+        'beginner-friendly',
+        'beginner friendly',
+        'easy',
+        'starter'
+      ];
+      
+      // Create the query string for labels
+      const labelQuery = labels.map(label => `label:"${label}"`).join('+OR+');
+      
+      const response = await fetch(
+        `${this.baseUrl}/search/issues?q=repo:${owner}/${repo}+${labelQuery}+state:open&sort=created&order=desc`,
+        { headers: this.headers }
+      );
+      
+      if (!response.ok) {
+        throw new Error(`GitHub API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      return data.items || [];
+    } catch (error) {
+      console.error('Error fetching beginner-friendly issues:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get a comprehensive project context for AI analysis
+   * @param {string} repoUrl - GitHub repository URL
+   * @returns {Promise} - Project context for AI
+   */
+  async getProjectContextForAI(repoUrl) {
+    const repoInfo = this.parseGitHubUrl(repoUrl);
+    if (!repoInfo) {
+      return {
+        success: false,
+        error: 'Invalid GitHub URL format'
+      };
+    }
+    
+    try {
+      const { owner, repo } = repoInfo;
+      
+      // Fetch all data in parallel
+      const [repoDetails, readmeContent, contributingContent, beginnerIssues] = await Promise.all([
+        this.getRepositoryDetails(owner, repo),
+        this.getReadmeContent(owner, repo),
+        this.getContributingContent(owner, repo),
+        this.getBeginnerFriendlyIssues(owner, repo)
+      ]);
+      
+      // Process issues to get simplified data
+      const processedIssues = beginnerIssues.slice(0, 5).map(issue => ({
+        number: issue.number,
+        title: issue.title,
+        url: issue.html_url,
+        labels: issue.labels.map(label => label.name)
+      }));
+      
+      return {
+        success: true,
+        repoDetails: {
+          name: repoDetails.name,
+          description: repoDetails.description,
+          stars: repoDetails.stargazers_count,
+          forks: repoDetails.forks_count,
+          language: repoDetails.language,
+          topics: repoDetails.topics || [],
+          hasIssues: repoDetails.has_issues,
+          url: repoDetails.html_url,
+          homepage: repoDetails.homepage
+        },
+        readme: readmeContent ? {
+          content: readmeContent.substring(0, 5000) // Limit size for API calls
+        } : null,
+        contributing: contributingContent ? {
+          content: contributingContent.substring(0, 5000) // Limit size for API calls
+        } : null,
+        beginnerIssues: processedIssues
+      };
+    } catch (error) {
+      console.error('Error getting project context:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
+}

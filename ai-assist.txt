@@ -1,0 +1,233 @@
+<script setup>
+import { ref, onMounted, watch } from 'vue';
+import { GoogleGenAI } from '@google/genai';
+import Button from 'primevue/button';
+import Card from 'primevue/card';
+import Textarea from 'primevue/textarea';
+
+const props = defineProps({
+  project: {
+    type: Object,
+    required: true
+  }
+});
+
+const aiResponse = ref('');
+const isLoading = ref(false);
+const errorMessage = ref('');
+const showAIPanel = ref(false);
+const customPrompt = ref('');
+
+// Initialize the Google Generative AI client
+const genAI = new GoogleGenAI({ apiKey: import.meta.env.VITE_GOOGLE_AI_API_KEY });
+
+// Function to generate AI suggestions based on project data
+const generateAISuggestions = async () => {
+  if (!props.project) return;
+  
+  isLoading.value = true;
+  errorMessage.value = '';
+  
+  try {
+    // Extract relevant project information
+    const projectInfo = {
+      title: props.project.title,
+      description: props.project.description,
+      skills: props.project.skills,
+      interestedCount: props.project.interested.length,
+      discussionsCount: props.project.discussions.length,
+      recentDiscussions: props.project.discussions.slice(-3).map(d => d.content)
+    };
+    
+    // Create prompt for the AI
+    const prompt = `
+    You are CollabHelper, an AI assistant for Collab-Sphere, a platform for students to collaborate on coding projects.
+    
+    Here's information about a project:
+    Title: ${projectInfo.title}
+    Description: ${projectInfo.description}
+    Required Skills: ${projectInfo.skills.join(', ')}
+    Interested Contributors: ${projectInfo.interestedCount}
+    Number of Discussions: ${projectInfo.discussionsCount}
+    
+    ${projectInfo.recentDiscussions.length > 0 ? 
+      `Recent discussions: 
+      ${projectInfo.recentDiscussions.join('\n')}` : 
+      'No discussions yet.'}
+    
+    Based on this information, please provide:
+    1. A brief analysis of the project
+    2. Concrete suggestions for how a new contributor could get started
+    3. Tips for effective collaboration
+    4. Potential first tasks that would be suitable for beginners
+    
+    Keep your response concise, friendly, and actionable. Focus on practical next steps.
+    `;
+    
+    const model = genAI.models.generateContent({
+      model: "gemini-2.0-flash",
+      contents: customPrompt.value || prompt,
+    });
+    
+    const result = await model;
+    aiResponse.value = result.text;
+  } catch (error) {
+    console.error('Error generating AI suggestions:', error);
+    errorMessage.value = `Failed to generate suggestions: ${error.message}`;
+    aiResponse.value = 'Sorry, I encountered an error while analyzing this project. Please try again later.';
+  } finally {
+    isLoading.value = false;
+  }
+};
+
+// Watch for changes to the project
+watch(() => props.project, (newProject) => {
+  if (newProject && showAIPanel.value) {
+    generateAISuggestions();
+  }
+}, { deep: true });
+
+// Toggle AI panel visibility
+const toggleAIPanel = () => {
+  showAIPanel.value = !showAIPanel.value;
+  if (showAIPanel.value && !aiResponse.value) {
+    generateAISuggestions();
+  }
+};
+
+// Handle custom prompt submission
+const submitCustomPrompt = () => {
+  if (customPrompt.value.trim()) {
+    generateAISuggestions();
+  }
+};
+</script>
+
+<template>
+  <div class="ai-assistant-container">
+    <Button 
+      @click="toggleAIPanel" 
+      :label="showAIPanel ? 'Hide AI Assistant' : 'Show AI Assistant'" 
+      :icon="showAIPanel ? 'pi pi-eye-slash' : 'pi pi-lightbulb'" 
+      class="p-button-rounded p-button-info ai-toggle-button"
+    />
+    
+    <div v-if="showAIPanel" class="ai-panel">
+      <Card>
+        <template #header>
+          <div class="ai-panel-header">
+            <h3><i class="pi pi-lightbulb"></i> AI Project Assistant</h3>
+          </div>
+        </template>
+        
+        <template #content>
+          <div v-if="isLoading" class="ai-loading">
+            <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
+            <p>Analyzing project and generating suggestions...</p>
+          </div>
+          
+          <div v-else-if="errorMessage" class="ai-error">
+            <p>{{ errorMessage }}</p>
+            <Button 
+              label="Try Again" 
+              icon="pi pi-refresh" 
+              @click="generateAISuggestions" 
+              class="p-button-sm"
+            />
+          </div>
+          
+          <div v-else-if="aiResponse" class="ai-response">
+            <div v-html="aiResponse.replace(/\n/g, '<br>')"></div>
+            
+            <div class="ai-actions">
+              <Button 
+                label="Refresh Suggestions" 
+                icon="pi pi-refresh" 
+                @click="generateAISuggestions" 
+                class="p-button-sm"
+              />
+            </div>
+          </div>
+          
+          <div class="custom-prompt-section">
+            <h4>Ask a specific question about this project</h4>
+            <Textarea 
+              v-model="customPrompt" 
+              rows="2" 
+              placeholder="E.g., What specific skills should I focus on to contribute?" 
+              class="w-full mb-2"
+            />
+            <Button 
+              label="Ask" 
+              icon="pi pi-send" 
+              @click="submitCustomPrompt" 
+              :disabled="!customPrompt.trim() || isLoading" 
+              class="p-button-sm"
+            />
+          </div>
+        </template>
+      </Card>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.ai-assistant-container {
+  margin-top: 2rem;
+}
+
+.ai-toggle-button {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 999;
+}
+
+.ai-panel {
+  margin-top: 1rem;
+  animation: slideIn 0.3s ease-out;
+}
+
+.ai-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ai-loading, .ai-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.ai-response {
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+.ai-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.custom-prompt-section {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+</style>
