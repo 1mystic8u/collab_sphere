@@ -1,8 +1,8 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, reactive } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { auth, db } from '../../firebase'; // Assuming firebase config is here
-import { doc, getDoc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, arrayUnion, deleteDoc, Timestamp } from 'firebase/firestore';
 
 // PrimeVue Components
 import Button from 'primevue/button';
@@ -10,6 +10,8 @@ import Card from 'primevue/card';
 import Avatar from 'primevue/avatar';
 import Chip from 'primevue/chip';
 import Textarea from 'primevue/textarea';
+import Dialog from 'primevue/dialog';
+import InputText from 'primevue/inputtext';
 // Removed InputText as it wasn't used
 
 
@@ -26,6 +28,21 @@ const newDiscussion = ref('');
 const commentLoading = ref(false);
 const interestLoading = ref(false);
 
+
+
+// State for Edit Dialog
+const showEditDialog = ref(false);
+const editLoading = ref(false);
+const editFormData = reactive({ // Use reactive for nested object changes
+    title: '',
+    description: '',
+    skills: '', // Keep skills as a comma-separated string for editing ease
+});
+
+// State for Delete
+const deleteLoading = ref(false);
+
+
 onMounted(async () => {
   const unsubscribe = auth.onAuthStateChanged(async (user) => {
     isLoggedIn.value = !!user;
@@ -41,6 +58,107 @@ onMounted(async () => {
   // Cleanup listener on unmount
   // return () => unsubscribe(); // Vue 3 automatically handles this for onMounted async setup
 });
+
+// --- UPDATE ---
+
+const openEditDialog = () => {
+  if (!project.value) return;
+  // Pre-fill form data with current project details
+  editFormData.title = project.value.title;
+  editFormData.description = project.value.description;
+  // Join the computed skills array back into a comma-separated string for the input
+  editFormData.skills = computedSkills.value.join(', ');
+  showEditDialog.value = true;
+};
+
+const saveProjectChanges = async () => {
+  if (!project.value || !editFormData.title || !editFormData.description) {
+      console.error("Title and Description are required.");
+      // Optionally show a user-facing error message (e.g., using PrimeVue Toast)
+      return;
+  }
+
+  editLoading.value = true;
+  try {
+    const projectRef = doc(db, 'projects', project.value.id);
+    const updatedData = {
+      title: editFormData.title.trim(),
+      description: editFormData.description.trim(),
+      // Split the string back into an array, trim whitespace, filter empty strings
+      skills: editFormData.skills.split(',').map(s => s.trim()).filter(Boolean),
+      // Add updatedAt timestamp?
+      // updatedAt: Timestamp.now()
+    };
+
+    await updateDoc(projectRef, updatedData);
+
+    // Update local project state optimistically
+    project.value = {
+        ...project.value, // Keep existing fields like interested, discussions, etc.
+        ...updatedData, // Overwrite updated fields
+        // If you add updatedAt, handle its conversion to Date locally if needed
+    };
+
+    showEditDialog.value = false; // Close dialog on success
+    console.log('Project updated successfully!');
+     // Optionally show a success message (e.g., PrimeVue Toast)
+
+  } catch (error) {
+    console.error('Error updating project:', error);
+     // Optionally show an error message
+  } finally {
+    editLoading.value = false;
+  }
+};
+
+// --- DELETE ---
+
+const confirmDeleteProject = () => {
+    if (!project.value) return;
+
+    // Simple browser confirmation (Replace with PrimeVue ConfirmDialog for better UX)
+    if (window.confirm(`Are you sure you want to delete the project "${project.value.title}"? This action cannot be undone.`)) {
+        deleteProject();
+    }
+
+    /* // Example using PrimeVue ConfirmationService
+    confirm.require({
+        message: `Are you sure you want to delete the project "${project.value.title}"? This action cannot be undone.`,
+        header: 'Confirm Deletion',
+        icon: 'pi pi-exclamation-triangle',
+        acceptClass: 'p-button-danger',
+        accept: () => {
+            deleteProject();
+        },
+        reject: () => {
+            // Optional: Callback for when user cancels
+        }
+    });
+    */
+};
+
+
+const deleteProject = async () => {
+  if (!project.value) return;
+
+  deleteLoading.value = true;
+  try {
+    const projectRef = doc(db, 'projects', project.value.id);
+    await deleteDoc(projectRef);
+
+    console.log('Project deleted successfully!');
+     // Optionally show a success message before redirecting
+
+    // Redirect user after successful deletion (e.g., to dashboard)
+    router.push('/dashboard'); // Or '/discover'
+
+  } catch (error) {
+    console.error('Error deleting project:', error);
+    // Optionally show an error message
+    deleteLoading.value = false; // Keep user on page if deletion fails
+  }
+  // No finally block needed for loading state if redirecting on success
+};
 
 const fetchProjectDetails = async () => {
   loading.value = true;
@@ -123,9 +241,9 @@ const hasExpressedInterest = computed(() => {
 const computedSkills = computed(() => {
   if (!project.value || !project.value.skills) return [];
   // Handle the case where skills is an array containing a single comma-separated string
-  if (Array.isArray(project.value.skills) && project.value.skills.length > 0 && typeof project.value.skills[0] === 'string') {
-    return project.value.skills[0].split(',').map(sk => sk.trim()).filter(Boolean);
-  }
+  
+    return project.value.skills ;
+  
   // Handle if skills is just a single string (less likely based on data, but safe)
   if (typeof project.value.skills === 'string') {
      return project.value.skills.split(',').map(sk => sk.trim()).filter(Boolean);
@@ -316,6 +434,23 @@ const formatDate = (date) => {
               class="p-button-raised p-button-secondary interest-button"
               disabled
             />
+
+             <!-- Creator Actions: Edit & Delete -->
+             <div v-if="isLoggedIn && isCreator" class="creator-actions">
+                <Button
+                    label="Edit Project"
+                    icon="pi pi-pencil"
+                    class="p-button-secondary p-button-sm action-button"
+                    @click="openEditDialog"
+                />
+                <Button
+                    label="Delete Project"
+                    icon="pi pi-trash"
+                    class="p-button-danger p-button-sm action-button"
+                    @click="confirmDeleteProject"
+                    :loading="deleteLoading"
+                />
+             </div>
         </div>
 
 
@@ -406,6 +541,38 @@ const formatDate = (date) => {
         
       </template>
 
+
+      <!-- Edit Project Dialog -->
+      <Dialog
+        v-model:visible="showEditDialog"
+        modal
+        header="Edit Project Details"
+        :style="{ width: '50vw' }"
+        :breakpoints="{'960px': '75vw', '640px': '90vw'}"
+        @hide="() => editLoading = false" > <!-- Reset loading state if dialog is closed manually -->
+
+        <div class="p-fluid formgrid grid">
+            <div class="field col-12">
+                <label for="editTitle">Project Title</label>
+                <InputText id="editTitle" v-model="editFormData.title" />
+            </div>
+            <div class="field col-12">
+                <label for="editDescription">Description</label>
+                <Textarea id="editDescription" v-model="editFormData.description" rows="5" autoResize />
+            </div>
+            <div class="field col-12">
+                <label for="editSkills">Required Skills (comma-separated)</label>
+                <InputText id="editSkills" v-model="editFormData.skills" />
+                 <small>e.g., Vue, Firebase, JavaScript, CSS</small>
+            </div>
+        </div>
+
+        <template #footer>
+            <Button label="Cancel" icon="pi pi-times" class="p-button-text" @click="showEditDialog = false" />
+            <Button label="Save Changes" icon="pi pi-check" @click="saveProjectChanges" :loading="editLoading" />
+        </template>
+      </Dialog>
+
      
 
     </div>
@@ -422,6 +589,66 @@ const formatDate = (date) => {
 
 <style scoped>
 
+/* Container for Interest/Edit/Delete buttons */
+.action-buttons-container {
+    /* Adjust positioning similar to the old interest-button-container */
+    margin-top: -60px; /* Pull buttons up - adjust if needed */
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    margin-bottom: 1rem; /* Space below buttons */
+    gap: 0.5rem; /* Space between buttons if multiple show */
+    height: 40px; /* Give it a fixed height to prevent layout shifts */
+    align-items: center;
+}
+
+/* Style for the creator's action buttons */
+.creator-actions {
+    display: flex;
+    gap: 0.5rem; /* Space between Edit and Delete */
+}
+
+.action-button.p-button-sm {
+    /* Ensure consistent size if needed */
+    /* height: 35px; */
+}
+
+/* Interest button specific style (if needed) */
+.interest-button {
+    min-width: 150px; /* Give button some width */
+}
+
+/* Adjustments for responsive */
+@media (max-width: 768px) {
+    .action-buttons-container {
+        margin-top: 1rem; /* Reset negative margin */
+        justify-content: flex-start; /* Align left on small screens */
+        margin-bottom: 1rem;
+    }
+}
+
+/* Styles for Edit Dialog Form */
+.p-dialog .field {
+    margin-bottom: 1rem;
+}
+.p-dialog .field label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+.p-dialog .field small {
+    display: block;
+    margin-top: 0.25rem;
+    color: #6c757d;
+}
+
+/* Ensure dynamic title uses space correctly */
+.project-details-header h2 {
+    margin-bottom: 0.25rem;
+    font-size: 1.8rem;
+    font-weight: bold;
+    word-break: break-word; /* Handle long titles */
+}
+
 .outer_enclose {
   display: grid;
   grid-template-columns: 4fr 1fr; /* Single column layout */
@@ -429,7 +656,7 @@ const formatDate = (date) => {
 }
 
 .ai_pane{
-  max-width: 15wv;
+  max-width: 25wv;
 }
 
 .page-container {

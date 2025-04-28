@@ -36,4 +36,6 @@ app.use(pinia);
 
 // Register PrimeVue components
 
+
+
 app.mount('#app');

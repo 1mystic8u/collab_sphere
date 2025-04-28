@@ -1,65 +1,94 @@
+<script>
+import { enable as enableDarkMode, disable as disableDarkMode, isEnabled } from 'darkreader';
+import { ref, onMounted } from 'vue';
+
+const darkModeEnabled = ref(false);
+
+function toggleDarkMode() {
+  if (darkModeEnabled.value) {
+    disableDarkMode();
+    darkModeEnabled.value = false;
+  } else {
+    enableDarkMode({
+      brightness: 100,
+      contrast: 110,
+      sepia: 0
+    });
+    darkModeEnabled.value = true;
+  }
+}
+
+onMounted(() => {
+  darkModeEnabled.value = isEnabled();
+});
+</script>
+
 <template>
   <div class="app-container">
 
-    <!-- Show the full layout ONLY if the user is logged in -->
-    <template v-if="isLoggedIn">
-      <div class="layout-wrapper">
-        <!-- Sidebar -->
-        <div class="sidebar">
-          <div class="sidebar-header">
-            <div class="logo">
-              <router-link to="/">Collab-Sphere</router-link>
-            </div>
-          </div>
-          <div class="sidebar-menu">
-             <ul>
-               <!-- Links relevant when logged in -->
-               <li><router-link to="/"><i class="pi pi-home"></i><span>Home</span></router-link></li>
-               <li><router-link to="/discover"><i class="pi pi-search"></i><span>Discover Projects</span></router-link></li>
-               <li><router-link to="/dashboard"><i class="pi pi-th-large"></i><span>Dashboard</span></router-link></li>
-               <li><a href="#" @click.prevent="handleLogout"><i class="pi pi-sign-out"></i><span>Logout</span></a></li>
-             </ul>
-          </div>
-          <div class="sidebar-footer">
-             <div class="user-profile">
-               <div class="user-avatar"><i class="pi pi-user"></i></div>
-               <div class="user-info"><span>User Profile</span></div>
-             </div>
-          </div>
-        </div>
+  <!-- Dark Mode Toggle Button -->
+  <button @click="toggleDarkMode" class="dark-mode-toggle">
+    <i :class="darkModeEnabled ? 'pi pi-sun' : 'pi pi-moon'"></i>
+  </button>
 
-        <!-- Main Content Area (for logged-in state) -->
-        <div class="main-content">
-          <header class="top-bar">
-             <div class="menu-toggle">
-               <button class="p-link"><i class="pi pi-bars"></i></button>
-             </div>
-             <div class="top-menu">
-               <ul>
-                 <li><a href="#" class="p-link"><i class="pi pi-bell"></i></a></li>
-                 <li><a href="#" class="p-link"><i class="pi pi-cog"></i></a></li>
-               </ul>
-             </div>
-          </header>
-          <div class="content">
-             <!-- This router-view renders components for logged-in users -->
-             <router-view :key="$route.fullPath" />
-          </div>
-        </div>
+  <!-- Show the full layout ONLY if the user is logged in -->
+  <template v-if="isLoggedIn">
+    <div class="layout-wrapper">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-header">
+      <div class="logo">
+        <router-link to="/">Collab-Sphere</router-link>
       </div>
-    </template>
+      </div>
+      <div class="sidebar-menu">
+       <ul>
+         <!-- Links relevant when logged in -->
+         <li><router-link to="/"><i class="pi pi-home"></i><span>Home</span></router-link></li>
+         <li><router-link to="/discover"><i class="pi pi-search"></i><span>Discover Projects</span></router-link></li>
+         <li><router-link to="/dashboard"><i class="pi pi-th-large"></i><span>Dashboard</span></router-link></li>
+         <li><a href="#" @click.prevent="handleLogout"><i class="pi pi-sign-out"></i><span>Logout</span></a></li>
+       </ul>
+      </div>
+      <div class="sidebar-footer">
+       <div class="user-profile">
+         <div class="user-avatar"><i class="pi pi-user"></i></div>
+         <div class="user-info"><span>User Profile</span></div>
+       </div>
+      </div>
+    </div>
 
-    <!-- Show only the routed component if the user is logged OUT -->
-    <template v-else>
-       <!-- This router-view renders Login, Register, public pages etc. -->
+    <!-- Main Content Area (for logged-in state) -->
+    <div class="main-content">
+      <header class="top-bar">
+       <div class="menu-toggle">
+         <button class="p-link"><i class="pi pi-bars"></i></button>
+       </div>
+       <div class="top-menu">
+         <ul>
+         <li><a href="#" class="p-link"><i class="pi pi-bell"></i></a></li>
+         <li><a href="#" class="p-link"><i class="pi pi-cog"></i></a></li>
+         </ul>
+       </div>
+      </header>
+      <div class="content">
+       <!-- This router-view renders components for logged-in users -->
        <router-view :key="$route.fullPath" />
-    </template>
+      </div>
+    </div>
+    </div>
+  </template>
+
+  <!-- Show only the routed component if the user is logged OUT -->
+  <template v-else>
+     <!-- This router-view renders Login, Register, public pages etc. -->
+     <router-view :key="$route.fullPath" />
+  </template>
 
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { auth } from './firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
@@ -69,19 +98,19 @@ const isLoggedIn = ref(false);
 
 onMounted(() => {
   onAuthStateChanged(auth, (user) => {
-    isLoggedIn.value = !!user;
-    // console.log('Auth State Changed - isLoggedIn:', isLoggedIn.value); // Debug log
+  isLoggedIn.value = !!user;
+  // console.log('Auth State Changed - isLoggedIn:', isLoggedIn.value); // Debug log
   });
 });
 
 const handleLogout = async () => {
   try {
-    await signOut(auth);
-    // No need to push here if onAuthStateChanged handles redirect logic via router guards
-    // If not using guards, you might still need: router.push('/login');
-    console.log('Logout successful');
+  await signOut(auth);
+  // No need to push here if onAuthStateChanged handles redirect logic via router guards
+  // If not using guards, you might still need: router.push('/login');
+  console.log('Logout successful');
   } catch (error) {
-    console.error('Logout error:', error);
+  console.error('Logout error:', error);
   }
 };
 
@@ -90,6 +119,21 @@ const handleLogout = async () => {
 
 <style>
 /* Styles remain the same */
+
+.dark-mode-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 2rem;
+  background-color: transparent;
+  border: none;
+  border-radius: 5rem;
+  cursor: pointer;
+  font-size: 1.5rem;
+  color: #555;
+  z-index: 1000; /* Ensure it's above other elements */
+}
+
+
 * {
   margin: 0;
   padding: 0;
@@ -98,9 +142,9 @@ const handleLogout = async () => {
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen,
-    Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-  background-color: #f9f9f9;
-  color: #333;
+  Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+  /*background-color: #f9f9f9;
+  color: #333;*/
   line-height: 1.6;
 }
 
@@ -303,57 +347,57 @@ template:not([v-if="isLoggedIn"]) > div {
 @media (max-width: 992px) {
   /* Only apply sidebar collapse if logged in */
   .layout-wrapper .sidebar {
-    width: 80px;
+  width: 80px;
   }
 
   .layout-wrapper .main-content {
-    margin-left: 80px;
+  margin-left: 80px;
   }
 
   .layout-wrapper .logo a span {
-     opacity: 0;
-     width: 0;
-     pointer-events: none;
-     display: none;
+   opacity: 0;
+   width: 0;
+   pointer-events: none;
+   display: none;
   }
    .layout-wrapper .logo a {
-     justify-content: center;
+   justify-content: center;
    }
 
   .layout-wrapper .sidebar-menu a span {
-    opacity: 0;
-    width: 0;
-    pointer-events: none;
-    display: none;
+  opacity: 0;
+  width: 0;
+  pointer-events: none;
+  display: none;
   }
 
   .layout-wrapper .sidebar-menu i {
-    margin-right: 0;
+  margin-right: 0;
   }
 
   .layout-wrapper .sidebar-menu a {
-    justify-content: center;
-    padding: 0.75rem 0;
-    margin: 0 0.5rem;
+  justify-content: center;
+  padding: 0.75rem 0;
+  margin: 0 0.5rem;
   }
 
   .layout-wrapper .user-info span {
-    opacity: 0;
-    width: 0;
-    pointer-events: none;
-     display: none;
+  opacity: 0;
+  width: 0;
+  pointer-events: none;
+   display: none;
   }
 
   .layout-wrapper .user-profile {
-      justify-content: center;
+    justify-content: center;
   }
 
   .layout-wrapper .user-avatar {
-      margin-right: 0;
+    margin-right: 0;
   }
 
   .layout-wrapper .sidebar-footer {
-      padding: 1rem 0.5rem;
+    padding: 1rem 0.5rem;
   }
 }
 
