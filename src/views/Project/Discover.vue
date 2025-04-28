@@ -1,3 +1,13 @@
+<script>
+
+import Button from 'primevue/button';
+import Card from 'primevue/card';
+import Avatar from 'primevue/avatar';
+import Chip from 'primevue/chip';
+import Textarea from 'primevue/textarea';
+import InputText from 'primevue/inputtext';
+</script>
+
 <template>
     <div class="discover-container">
       <div class="discover-header">

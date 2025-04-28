@@ -1,3 +1,14 @@
+<script>
+import Button from 'primevue/button';
+import Card from 'primevue/card';
+import Avatar from 'primevue/avatar';
+import Chip from 'primevue/chip';
+import Textarea from 'primevue/textarea';
+import InputText from 'primevue/inputtext';
+
+</script>
+
+
 <template>
     <div class="project-details-container">
       <div v-if="loading" class="loading-state">

@@ -1,4 +1,27 @@
+<script>
+import Button from 'primevue/button';
+</script>
+
 <template>
+  <div class="app-header">
+      <div class="logo">
+        <router-link to="/">Collab-Sphere</router-link>
+      </div>
+      <nav class="nav-links">
+        <router-link to="/">Home</router-link>
+        <router-link to="/discover">Discover Projects</router-link>
+        <template v-if="isLoggedIn">
+          <router-link to="/dashboard">Dashboard</router-link>
+          <a href="#" @click.prevent="handleLogout">Logout</a>
+        </template>
+        <template v-else>
+          <router-link to="/login">Login</router-link>
+          <router-link to="/register">Register</router-link>
+        </template>
+      </nav>
+  </div>
+    
+
     <div class="home-container">
       <div class="hero-section">
         <h1>Welcome to Collab-Sphere</h1>
@@ -49,6 +72,58 @@
   </script>
   
   <style scoped>
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.logo a {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #10b981;
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+}
+
+.nav-links a {
+  color: #555;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.nav-links a:hover {
+  color: #10b981;
+}
+
+.app-content {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .nav-links {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
   .home-container {
     display: flex;
     flex-direction: column;

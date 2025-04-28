@@ -1,3 +1,7 @@
+<script>
+  import InputText from 'primevue/inputtext';
+  import Button from 'primevue/button';
+</script>
 <template>
     <div class="auth-container">
       <Card class="auth-card">
