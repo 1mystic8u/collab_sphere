@@ -47,7 +47,7 @@ onMounted(() => {
       <div class="sidebar-menu">
        <ul>
          <!-- Links relevant when logged in -->
-         <li><router-link to="/"><i class="pi pi-home"></i><span>Home</span></router-link></li>
+         <li><router-link to="/home"><i class="pi pi-home"></i><span>Home</span></router-link></li>
          <li><router-link to="/discover"><i class="pi pi-search"></i><span>Discover Projects</span></router-link></li>
          <li><router-link to="/dashboard"><i class="pi pi-th-large"></i><span>Dashboard</span></router-link></li>
          <li><a href="#" @click.prevent="handleLogout"><i class="pi pi-sign-out"></i><span>Logout</span></a></li>
