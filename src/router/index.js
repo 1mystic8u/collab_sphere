@@ -1,12 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import Home from '../views/Home.vue';
+
 import { auth } from '../firebase';
 
 const routes = [
   {
     path: '/',
     name: 'Home',
-    component: Home
+    component:() => import('../views/Home.vue')
   },
   {
     path: '/login',
@@ -19,7 +19,7 @@ const routes = [
     component: () => import('../views/Auth/Register.vue')
   },
   { path : '/home',
-    name: 'Home',
+    name: 'UHome',
     component: () => import('../views/Project/userhome.vue')
   },
   {
