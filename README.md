@@ -1,6 +1,6 @@
 # <div align="center"> <img src="link_to_your_logo_here.png" alt="Collab-Sphere Logo" width="150"> <br> Collab-Sphere - Ignite Your Open Source Journey! 🚀 </div>
 
-[![Deployed on Firebase](https://img.shields.io/badge/Deployed%20on-Firebase-orange?style=for-the-badge&logo=firebase)](YOUR_DEPLOYED_LINK_HERE)
+[![Deployed on VERCEL](https://img.shields.io/badge/Deployed%20on-Vercel-green?style=for-the-badge&logo=vercel)](https://collab-sphere-account-2-backup.vercel.app/)
 
 Hey fellow coders! 👋 Ever felt that itch to contribute to open source but didn't know where to start? Or maybe you've got a cool project idea brewing and need some awesome collaborators? That's exactly why we built **Collab-Sphere**!
 
@@ -133,4 +133,3 @@ We'd love for you to contribute to Collab-Sphere! Whether you're a seasoned open
 * **Submit pull requests:** If you're a developer, feel free to fork the repository, make your changes, and submit a pull request.
 
 Please follow our [Contribution Guidelines](CONTRIBUTING.md) (we'll add this file soon!) for more details.
-
