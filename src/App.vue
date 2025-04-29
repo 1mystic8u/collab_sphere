@@ -56,7 +56,7 @@ onMounted(() => {
       <div class="sidebar-footer">
        <div class="user-profile">
          <div class="user-avatar"><i class="pi pi-user"></i></div>
-         <div class="user-info"><span>User Profile</span></div>
+         <div class="user-info"><span></span></div>
        </div>
       </div>
     </div>
@@ -69,8 +69,8 @@ onMounted(() => {
        </div>
        <div class="top-menu">
          <ul>
-         <li><a href="#" class="p-link"><i class="pi pi-bell"></i></a></li>
-         <li><a href="#" class="p-link"><i class="pi pi-cog"></i></a></li>
+         <!--<li><a href="#" class="p-link"><i class="pi pi-bell"></i></a></li>
+         <li><a href="#" class="p-link"><i class="pi pi-cog"></i></a></li> -->
          </ul>
        </div>
       </header>

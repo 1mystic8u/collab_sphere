@@ -397,9 +397,9 @@ const formatDate = (date) => {
         <!-- Back Button -->
         <div class="back-button-container">
           <Button
-            label="< Back to Dashboard"
-            class="p-button-text p-button-sm back-button"
-            @click="router.push('/dashboard')" />
+            label="< Back to Home"
+            style="background-color: aliceblue;"
+            @click="router.push('/home')" />
             <!-- Assuming '/dashboard' is the correct route -->
         </div>
 
