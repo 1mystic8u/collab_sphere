@@ -1,271 +1,263 @@
+```vue
 <template>
-  <div class="dashboard-container p-4">
+  <div class="dashboard-container">
     <!-- Header Section with Summary Stats -->
-    <div class="flex flex-col md:flex-row justify-between items-center mb-6">
-      <h1 class="text-3xl font-bold">Dashboard</h1>   
-      
-  
-    </div>
-    <br>
-
-    <div v-if="loading" class="text-center p-8">
-      <ProgressSpinner style="width:50px;height:50px" />
-      <p class="mt-3 text-lg">Loading dashboard data...</p>
+    <div class="dashboard-header">
+      <h1>Dashboard</h1>
     </div>
 
-    <div v-else-if="error" class="p-error text-center p-8 bg-red-50 rounded-lg">
-      <i class="pi pi-exclamation-triangle text-3xl mb-2"></i>
-      <p class="text-lg">Error loading dashboard data: {{ error }}</p>
-      <Button label="Retry" icon="pi pi-refresh" class="mt-3" @click="loadDashboardData" />
+    <div class="loading-container" v-if="loading">
+      <ProgressSpinner />
+      <p>Loading dashboard data...</p>
     </div>
 
-    <div class="out_encl" v-else>
-      <!-- Welcome Card & Summary Stats -->
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-5 mb-6">
-        <div class="top-cards">
-          <Card class="lg:col-span-1 shadow-md bg-gradient-to-r from-blue-500 to-indigo-600 text-white">
-            <template #content>
-              <div class="flex flex-col items-center justify-center p-2">
-                <div class="rounded-full bg-white/30 p-3 mb-2">
-                  <i class="pi pi-user text-3xl"></i>
-                </div>
-                <h2 class="text-xl font-bold mb-1">Welcome Back</h2>
-                <p class="font-medium text-center">{{ user?.displayName || 'User' }}</p>
+    <div class="error-container" v-else-if="error">
+      <i class="pi pi-exclamation-triangle"></i>
+      <p>Error loading dashboard data: {{ error }}</p>
+      <Button label="Retry" icon="pi pi-refresh" @click="loadDashboardData" />
+    </div>
+
+    <div class="dashboard-content" v-else>
+      <!-- Summary Stats Cards -->
+      <div class="summary-stats">
+        <Card class="welcome-card">
+          <template #content>
+            <div class="welcome-content">
+              <div class="icon-circle">
+                <i class="pi pi-user"></i>
               </div>
-            </template>
-          </Card>
+              <h2>Welcome Back</h2>
+              <p>{{ user?.displayName || 'User' }}</p>
+            </div>
+          </template>
+        </Card>
 
-          
-            <Card class="shadow-md hover:shadow-lg transition-shadow">
-              <template #content>
-                <div class="flex items-center">
-                  <div class="bg-green-100 rounded-full p-3 mr-3">
-                    <i class="pi pi-folder text-green-600 text-2xl"></i>
-                  </div>
-                  <div>
-                    <div class="text-3xl font-bold">{{ myProjects.length }}</div>
-                    <div class="text-sm text-gray-500">My Projects</div>
-                  </div>
-                </div>
-              </template>
-            </Card>
+        <Card>
+          <template #content>
+            <div class="stat-item">
+              <div class="stat-icon">
+                <i class="pi pi-folder"></i>
+              </div>
+              <div class="stat-info">
+                <div class="stat-value">{{ myProjects.length }}</div>
+                <div class="stat-label">My Projects</div>
+              </div>
+            </div>
+          </template>
+        </Card>
 
-              <Card class="shadow-md hover:shadow-lg transition-shadow">
-                <template #content>
-                  <div class="flex items-center">
-                    <div class="bg-orange-100 rounded-full p-3 mr-3">
-                      <i class="pi pi-heart text-orange-600 text-2xl"></i>
-                    </div>
-                    <div>
-                      <div class="text-3xl font-bold">{{ interestedProjects.length }}</div>
-                      <div class="text-sm text-gray-500">Interests</div>
-                    </div>
-                  </div>
-                </template>
-              </Card>
-         
+        <Card>
+          <template #content>
+            <div class="stat-item">
+              <div class="stat-icon">
+                <i class="pi pi-heart"></i>
+              </div>
+              <div class="stat-info">
+                <div class="stat-value">{{ interestedProjects.length }}</div>
+                <div class="stat-label">Interests</div>
+              </div>
+            </div>
+          </template>
+        </Card>
 
-            <Card class="shadow-md hover:shadow-lg transition-shadow">
-              <template #content>
-                <div class="flex items-center">
-                  <div class="bg-blue-100 rounded-full p-3 mr-3">
-                    <i class="pi pi-comments text-blue-600 text-2xl"></i>
-                  </div>
-                  <div>
-                    <div class="text-3xl font-bold">{{ totalComments }}</div>
-                    <div class="text-sm text-gray-500">Discussions</div>
-                  </div>
-                </div>
-              </template>
-            </Card>
-          
-        </div>
+        <Card>
+          <template #content>
+            <div class="stat-item">
+              <div class="stat-icon">
+                <i class="pi pi-comments"></i>
+              </div>
+              <div class="stat-info">
+                <div class="stat-value">{{ totalComments }}</div>
+                <div class="stat-label">Discussions</div>
+              </div>
+            </div>
+          </template>
+        </Card>
       </div>
 
       <!-- Activity Chart Section -->
-      <div class="mb-6">
-        <Card class="shadow-md">
+      <div class="chart-section">
+        <Card>
           <template #title>
-            <div class="flex justify-between items-center">
+            <div class="card-header">
               <span>User Activity</span>
               <Dropdown 
                 v-model="activityPeriod" 
                 :options="activityPeriodOptions" 
                 optionLabel="label" 
                 optionValue="value" 
-                placeholder="Select Period" 
-                class="w-40"
+                placeholder="Select Period"
               />
             </div>
           </template>
           <template #content>
-            <Chart type="bar" :data="activityChartData" :options="activityChartOptions" class="h-72" />
+            <Chart type="bar" :data="activityChartData" :options="activityChartOptions" />
           </template>
         </Card>
       </div>
 
       <!-- Main Content Area -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="main_content">
         <!-- My Projects Section -->
-        <Card class="lg:col-span-2 shadow-md">
-          <template #title>
-            <div class="flex justify-between items-center">
-              <span>My Projects ({{ myProjects.length }})</span>
-              <div class="flex gap-2">
-                <Button icon="pi pi-plus" class="p-button-sm p-button-outlined" @click="goToCreateProject" />
-                <Button icon="pi pi-filter" class="p-button-sm p-button-outlined" v-tooltip.top="'Filter Projects'" />
-              </div>
-            </div>
-          </template>
-          <template #content>
-            <DataTable 
-              :value="myProjects" 
-              :paginator="myProjects.length > 5" 
-              :rows="5" 
-              v-if="myProjects.length > 0"
-              tableStyle="min-width: 100%"             
-              class="p-datatable-sm"
-            >
-              <Column field="title" header="Project Name">
-                <template #body="slotProps">
-                  <div class="flex items-center cursor-pointer" @click="goToProjectDetails(slotProps.data.id)">
-                    <div class="w-2 h-2 rounded-full bg-green-500 mr-2"></div>
-                    <span class="font-medium">{{ slotProps.data.title || 'Untitled Project' }}</span>
-                  </div>
-                </template>
-              </Column>
-              <Column field="skills" header="Skills" class="hidden sm:table-cell">
-                <template #body="slotProps">
-                  <div class="flex flex-wrap gap-1">
-                    <Chip v-for="skill in slotProps.data.skills?.slice(0, 2)" :key="skill" :label="skill" class="text-xs" />
-                    <Chip v-if="slotProps.data.skills?.length > 2" :label="`+${slotProps.data.skills.length - 2}`" class="text-xs" />
-                  </div>
-                </template>
-              </Column>
-              <Column field="interested" header="Interested" class="hidden md:table-cell">
-                <template #body="slotProps">
-                  <div class="flex items-center">
-                    <i class="pi pi-users mr-2 text-blue-500"></i>
-                    <span>{{ slotProps.data.interested?.length || 0 }}</span>
-                  </div>
-                </template>
-              </Column>
-              <Column field="createdAt" header="Created" class="hidden lg:table-cell">
-                <template #body="slotProps">
-                  <span>{{ formatDate(slotProps.data.createdAt) }}</span>
-                </template>
-              </Column>
-              <Column header="Actions" style="width: 80px">
-                <template #body="slotProps">
-                  <div class="flex gap-2">
-                    <Button icon="pi pi-eye" class="p-button-text p-button-rounded p-button-sm" @click="goToProjectDetails(slotProps.data.id)" />
-                  </div>
-                </template>
-              </Column>
-              
-            </DataTable>
-             
-            <div v-else class="text-center py-8">
-              <i class="pi pi-folder-open text-4xl text-gray-300 mb-3"></i>
-              <p class="text-gray-500">You haven't created any projects yet.</p>
-              <Button label="Create Your First Project" icon="pi pi-plus" class="mt-3" @click="goToCreateProject" />
-            </div>
-          </template>
-        </Card>
-        <br>
-
-        <!-- Right Side Content -->
-        <div class="lg:col-span-1 flex flex-col gap-6">
-          <!-- Projects by Skills Pie Chart -->
-          <Card class="shadow-md">
-            <template #title>Projects by Skills</template>
-            <template #content>
-              <Chart type="doughnut" :data="skillsChartData" :options="skillsChartOptions" class="h-64" />
-            </template>
-          </Card>
-          <br>
-          <!-- Interested Projects -->
-          <Card class="shadow-md">
-            <template #title>Interested Projects</template>
-            <template #content>
-              <div v-if="interestedProjects.length > 0">
-                <ul class="list-none p-0 m-0">
-                  <li v-for="project in interestedProjects.slice(0, 5)" :key="project.id" 
-                      class="flex items-center p-3 border-b border-gray-100 hover:bg-gray-50 cursor-pointer"
-                      @click="goToProjectDetails(project.id)">
-                    <div class="flex-1">
-                      <div class="font-medium">{{ project.title }}</div>
-                      <div class="text-sm text-gray-500">by {{ project.createdBy?.displayName }}</div>
-                    </div>
-                    <Badge :value="project.discussions?.length || 0" severity="info" class="mr-2"></Badge>
-                    <Button icon="pi pi-angle-right" class="p-button-text p-button-rounded p-button-sm" />
-                  </li>
-                </ul>
-                <div v-if="interestedProjects.length > 5" class="text-center mt-3">
-                  <Button label="View All" icon="pi pi-arrow-right" iconPos="right" class="p-button-text p-button-sm" />
-                </div>
-              </div>
-              <div v-else class="text-center py-6">
-                <i class="pi pi-search text-3xl text-gray-300 mb-2"></i>
-                <p class="text-gray-500">No interests yet. Explore projects to find collaborations.</p>
-                <Button label="Explore Projects" icon="pi pi-compass" class="mt-3 p-button-outlined" />
-              </div>
-            </template>
+        <div class="projects-section" style="width: 100%;">
+          <Card style="width: 100%;">
+        <template #title>
+          <div class="card-header">
+          <span>My Projects ({{ myProjects.length }})</span>
+          <div class="action-buttons">
+        <Button icon="pi pi-plus" class="p-button-outlined" @click="goToCreateProject" />
+        <Button icon="pi pi-filter" class="p-button-outlined" v-tooltip.top="'Filter Projects'" />
+          </div>
+          </div>
+        </template>
+        <template #content>
+          <DataTable 
+          :value="myProjects" 
+          :paginator="myProjects.length > 5" 
+          :rows="5" 
+          v-if="myProjects.length > 0"
+          style="width: 100%;"
+          >
+          <Column field="title" header="Project Name">
+        <template #body="slotProps">
+          <div class="project-name" @click="goToProjectDetails(slotProps.data.id)">
+            <div class="status-indicator"></div>
+            <span>{{ slotProps.data.title || 'Untitled Project' }}</span>
+          </div>
+        </template>
+          </Column>
+          <Column field="skills" header="Skills" class="skills-column">
+        <template #body="slotProps">
+          <div class="skills-wrapper">
+            <Chip v-for="skill in slotProps.data.skills?.slice(0, 2)" :key="skill" :label="skill" />
+            <Chip v-if="slotProps.data.skills?.length > 2" :label="`+${slotProps.data.skills.length - 2}`" />
+          </div>
+        </template>
+          </Column>
+          <Column field="interested" header="Interested" class="interested-column">
+        <template #body="slotProps">
+          <div class="interested-count">
+            <i class="pi pi-users"></i>
+            <span>{{ slotProps.data.interested?.length || 0 }}</span>
+          </div>
+        </template>
+          </Column>
+          <Column field="createdAt" header="Created" class="date-column">
+        <template #body="slotProps">
+          <span>{{ formatDate(slotProps.data.createdAt) }}</span>
+        </template>
+          </Column>
+          <Column header="Actions">
+        <template #body="slotProps">
+          <div class="action-buttons">
+            <Button icon="pi pi-eye" class="p-button-text p-button-rounded" @click="goToProjectDetails(slotProps.data.id)" />
+          </div>
+        </template>
+          </Column>
+          </DataTable>
+           
+          <div class="empty-state" v-else>
+          <i class="pi pi-folder-open"></i>
+          <p>You haven't created any projects yet.</p>
+          <Button label="Create Your First Project" icon="pi pi-plus" @click="goToCreateProject" />
+          </div>
+        </template>
           </Card>
         </div>
-      </div>
-      
-      <!-- Recent Activity and Discussions Section -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-        <!-- Recent Activity Timeline -->
-        <Card class="shadow-md">
-          <template #title>Recent Activity</template>
+
+        <!-- Projects by Skills Pie Chart -->
+        <Card class="skills-chart-card" style="width: 100%;">
+          <template #title>Projects by Skills</template>
           <template #content>
-            <Timeline :value="recentActivity" class="w-full">
-              <template #content="slotProps">
-                <div class="flex flex-col">
-                  <small class="text-gray-500">{{ formatTimeAgo(slotProps.item.time) }}</small>
-                  <div class="text-sm my-1">{{ slotProps.item.description }}</div>
-                  <div v-if="slotProps.item.link" 
-                      class="text-xs text-blue-600 cursor-pointer hover:underline"
-                      @click="navigateTo(slotProps.item.link)">
-                    View details
-                  </div>
-                </div>
-              </template>
-              <template #opposite="slotProps">
-                <div class="flex justify-center items-center w-10 h-10 rounded-full" 
-                      :class="getActivityIconClass(slotProps.item.type)">
-                  <i :class="getActivityIcon(slotProps.item.type)"></i>
-                </div>
-              </template>
-            </Timeline>
+        <Chart type="doughnut" :data="skillsChartData" :options="skillsChartOptions" />
           </template>
         </Card>
-        <br>
+
+        <!-- Interested Projects -->
+        <Card class="interested-projects-card" style="width: 100%;">
+          <template #title>Interested Projects</template>
+          <template #content>
+        <div v-if="interestedProjects.length > 0">
+          <ul class="interested-list">
+            <li 
+          v-for="project in interestedProjects.slice(0, 5)" 
+          :key="project.id" 
+          class="interested-item"
+          @click="goToProjectDetails(project.id)"
+            >
+          <div class="project-info">
+            <div class="project-title">{{ project.title }}</div>
+            <div class="project-author">by {{ project.createdBy?.displayName }}</div>
+          </div>
+          <Badge :value="project.discussions?.length || 0" severity="info"></Badge>
+          <Button icon="pi pi-angle-right" class="p-button-text p-button-rounded" />
+            </li>
+          </ul>
+          <div class="view-all" v-if="interestedProjects.length > 5">
+            <Button label="View All" icon="pi pi-arrow-right" iconPos="right" class="p-button-text" />
+          </div>
+        </div>
+        <div class="empty-state" v-else>
+          <i class="pi pi-search"></i>
+          <p>No interests yet. Explore projects to find collaborations.</p>
+          <Button label="Explore Projects" icon="pi pi-compass" class="p-button-outlined" />
+        </div>
+          </template>
+        </Card>
+      </div>
+
+      
+      <!-- Recent Activity and Discussions Section -->
+      <div class="activity-discussion">
+        <!-- Recent Activity Timeline -->
+        <Card class="activity-card">
+          <template #title>Recent Activity</template>
+          <template #content>
+        <Timeline :value="recentActivity" >
+          <template #content="slotProps">
+            <div class="timeline-content">
+          <small>{{ formatTimeAgo(slotProps.item.time) }}</small>
+          <div class="timeline-description">{{ slotProps.item.description }}</div>
+          <div 
+            v-if="slotProps.item.link" 
+            class="timeline-link"
+            @click="navigateTo(slotProps.item.link)"
+          >
+            View details
+          </div>
+            </div>
+          </template>
+          <template #marker="slotProps">
+            <div class="timeline-icon" :class="getActivityIconClass(slotProps.item.type)">
+          <i :class="getActivityIcon(slotProps.item.type)"></i>
+            </div>
+          </template>
+        </Timeline>
+          </template>
+        </Card>
+
         <!-- Recent Discussions -->
-        <Card class="shadow-md">
+        <Card class="discussions-card">
           <template #title>Recent Discussions</template>
           <template #content>
             <div v-if="recentDiscussions.length > 0">
-              <div v-for="(discussion, index) in recentDiscussions" :key="index"
-                  class="border-b border-gray-100 last:border-b-0 py-3">
-                <div class="flex items-start">
-                  <Avatar :label="discussion.user.displayName.charAt(0)" class="mr-3" size="large" />
-                  <div>
-                    <div class="flex items-center">
-                      <span class="font-medium">{{ discussion.user.displayName }}</span>
-                      <span class="text-xs text-gray-500 ml-3">in {{ discussion.projectTitle }}</span>
+              <div v-for="(discussion, index) in recentDiscussions" :key="index" class="discussion-item">
+                <div class="discussion-content">
+                  <Avatar :label="discussion.user.displayName.charAt(0)" class="discussion-avatar" />
+                  <div class="discussion-details">
+                    <div class="discussion-header">
+                      <span class="user-name">{{ discussion.user.displayName }}</span>
+                      <span class="project-reference">in {{ discussion.projectTitle }}</span>
                     </div>
-                    <p class="my-1 text-sm">{{ discussion.content }}</p>
-                    <small class="text-gray-500 italic">{{ formatTimeAgo(discussion.createdAt) }}</small>
+                    <p class="discussion-text">{{ discussion.content }}</p>
+                    <small class="discussion-time">{{ formatTimeAgo(discussion.createdAt) }}</small>
                   </div>
                 </div>
               </div>
             </div>
-            <div v-else class="text-center py-6">
-              <i class="pi pi-comments text-3xl text-gray-300 mb-2"></i>
-              <p class="text-gray-500">No recent discussions.</p>
+            <div class="empty-state" v-else>
+              <i class="pi pi-comments"></i>
+              <p>No recent discussions.</p>
             </div>
           </template>
         </Card>
@@ -303,6 +295,7 @@ const error = ref(null);
 const recentActivity = ref([]);
 const recentDiscussions = ref([]);
 const totalComments = ref(0);
+
 
 // Activity chart state
 const activityPeriod = ref('week');
@@ -473,10 +466,10 @@ const getActivityIcon = (type) => {
 
 const getActivityIconClass = (type) => {
   switch (type) {
-    case 'create': return 'bg-green-100 text-green-600';
-    case 'interest': return 'bg-red-100 text-red-600';
-    case 'comment': return 'bg-blue-100 text-blue-600';
-    default: return 'bg-gray-100 text-gray-600';
+    case 'create': return 'create-activity';
+    case 'interest': return 'interest-activity';
+    case 'comment': return 'comment-activity';
+    default: return 'default-activity';
   }
 };
 
@@ -628,76 +621,387 @@ onMounted(() => {
 </script>
 
 <style scoped>
-
-.out_encl {
- display: flex;
-  flex-direction: column;
-    gap: 1rem;
-}
-
-.top-cards {
-  display: flex;
-  flex-direction: row;
-  gap: 1rem;
-}
-
+/* Base Styles */
 .dashboard-container {
   max-width: 1400px;
   margin: 0 auto;
+  padding: 1.5rem;
 }
 
-:deep(.p-card) {
-  border-radius: 0.5rem;
-  overflow: hidden;
+.dashboard-header {
+  margin-bottom: 2rem;
 }
 
-:deep(.p-card .p-card-content) {
+.dashboard-header h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.loading-container,
+.error-container,
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+}
+
+.loading-container p,
+.error-container p {
+  margin-top: 0.75rem;
+  font-size: 1.125rem;
+}
+
+.error-container i {
+  font-size: 2rem;
+  color: #ef4444;
+  margin-bottom: 0.5rem;
+}
+
+.error-container button {
+  margin-top: 0.75rem;
+}
+
+/* Summary Stats Section */
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.welcome-card {
+  background: linear-gradient(to right, #4f46e5, #3b82f6);
+  color: white;
+}
+
+.welcome-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.icon-circle {
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.icon-circle i {
+  font-size: 1.5rem;
+}
+
+.welcome-content h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+}
+
+.stat-icon {
+  background-color: #e0f2fe;
+  border-radius: 50%;
+  padding: 0.75rem;
+  margin-right: 0.75rem;
+}
+
+.stat-icon i {
+  font-size: 1.25rem;
+  color: #0ea5e9;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Chart Section */
+.chart-section {
+  margin-bottom: 1.5rem;
+}
+
+.chart-section :deep(.p-card-content) {
+  height: 18rem;
+}
+
+/* Card Header Styles */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Main Content Grid */
+.main_content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Projects Table Styles */
+.project-name {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.status-indicator {
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: #10b981;
+  border-radius: 50%;
+  margin-right: 0.5rem;
+}
+
+.skills-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.interested-count {
+  display: flex;
+  align-items: center;
+}
+
+.interested-count i {
+  color: #3b82f6;
+  margin-right: 0.5rem;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Empty State Styling */
+.empty-state {
+  padding: 2rem 0;
+}
+
+.empty-state i {
+  font-size: 2.5rem;
+  color: #d1d5db;
+  margin-bottom: 0.75rem;
+}
+
+.empty-state p {
+  color: #6b7280;
+  margin-bottom: 0.75rem;
+}
+
+/* Interested Projects List */
+.interested-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.interested-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  border-bottom: 1px solid #f3f4f6;
+  cursor: pointer;
+}
+
+.interested-item:hover {
+  background-color: #f9fafb;
+}
+
+.interested-item:last-child {
+  border-bottom: none;
+}
+
+.project-info {
+  flex: 1;
+}
+
+.project-title {
+  font-weight: 500;
+}
+
+.project-author {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.view-all {
+  text-align: center;
+  margin-top: 0.75rem;
+}
+
+/* Activity & Discussions Grid */
+.activity-discussion {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+/* Timeline Styling */
+.activity-card :deep(.p-card-content) {
   padding: 1rem;
 }
 
-:deep(.p-card .p-card-title) {
-  font-size: 1.1rem;
-  font-weight: 600;
-  padding: 1rem;
-  margin-bottom: 0;
+/* Style the timeline marker */
+:deep(.p-timeline .p-timeline-event-marker) {
+    border: none; /* Remove default border */
+    position: relative; /* Ensure marker is positioned correctly */
+    /* Adjust left position if needed based on alignment */
+}
+
+/* Style the timeline connector */
+:deep(.p-timeline .p-timeline-event-connector) {
+    background-color: #e5e7eb; /* gray-200 */
+    width: 2px;
+}
+
+/* Hide the opposite content area for left/right alignment */
+:deep(.p-timeline-left .p-timeline-event-opposite),
+:deep(.p-timeline-right .p-timeline-event-opposite) {
+    display: none; /* Completely hide the opposite div */
+}
+
+/* Adjust content padding when opposite is hidden */
+:deep(.p-timeline-left .p-timeline-event-content),
+:deep(.p-timeline-right .p-timeline-event-content) {
+    padding-left: 1rem; /* Ensure consistent padding */
+    padding-right: 0; /* Remove padding on the side where opposite used to be */
+}
+
+.timeline-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 2.25rem; /* Slightly smaller */
+  height: 2.25rem;
+  border-radius: 50%;
+  margin-top: 0.25rem; /* Align better with text */
+  z-index: 1; /* Ensure marker is above connector */
+}
+
+.create-activity {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.interest-activity {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+.comment-activity {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.default-activity {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.timeline-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-description {
+  font-size: 0.875rem;
+  margin: 0.25rem 0;
+}
+
+.timeline-link {
+  font-size: 0.75rem;
+  color: #3b82f6;
+  cursor: pointer;
+}
+
+.timeline-link:hover {
+  text-decoration: underline;
+}
+
+/* Discussion Item Styling */
+.discussion-item {
+  padding: 0.75rem 0;
   border-bottom: 1px solid #f3f4f6;
 }
 
-:deep(.p-timeline-event-opposite) {
-  flex: 0;
-  padding-right: 1rem;
+.discussion-item:last-child {
+  border-bottom: none;
 }
 
-:deep(.p-dropdown .p-dropdown-label) {
+.discussion-content {
+  display: flex;
+}
+
+.discussion-avatar {
+  margin-right: 0.75rem;
+}
+
+.discussion-details {
+  flex: 1;
+}
+
+.discussion-header {
+  display: flex;
+  align-items: center;
+}
+
+.user-name {
+  font-weight: 500;
+}
+
+.project-reference {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-left: 0.75rem;
+}
+
+.discussion-text {
+  margin: 0.25rem 0;
   font-size: 0.875rem;
 }
 
-:deep(.p-datatable .p-datatable-thead > tr > th) {
-  background-color: #f9fafb;
-  color: #374151;
-  font-weight: 600;
-  font-size: 0.875rem;
-  padding: 0.75rem 1rem;
+.discussion-time {
+  color: #6b7280;
+  font-style: italic;
 }
 
-:deep(.p-datatable .p-datatable-tbody > tr > td) {
-  padding: 0.75rem 1rem;
-  font-size: 0.875rem;
+/* Card Styles */
+:deep(.p-card) {
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
 }
 
-:deep(.p-datatable .p-paginator) {
-  padding: 0.5rem;
+:deep(.p-card:hover) {
+  box-shadow: 0 4px 6px -1px rgba(0,  0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Responsive adjustments */
-@media (max-width: 640px) {
-  :deep(.p-card .p-card-title) {
-    font-size: 1rem;
-    padding: 0.75rem;
-  }
-  
-  :deep(.p-card .p-card-content) {
-    padding: 0.75rem;
-  }
-}
 </style>
+```
