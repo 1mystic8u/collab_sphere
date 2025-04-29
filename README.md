@@ -134,12 +134,3 @@ We'd love for you to contribute to Collab-Sphere! Whether you're a seasoned open
 
 Please follow our [Contribution Guidelines](CONTRIBUTING.md) (we'll add this file soon!) for more details.
 
-## 📜 License
-
-This project is open source and will be released under the [MIT License](LICENSE) (we'll add this file soon!).
-
-## 🙏 Special Thanks
-
-We'd like to thank the open-source community for their amazing tools and resources that made this project possible.
-
-Let's connect and build the future of open-source collaboration, one student at a time! Happy coding! 🚀
