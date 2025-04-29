@@ -1,6 +1,6 @@
 # <div align="center"> <img src="link_to_your_logo_here.png" alt="Collab-Sphere Logo" width="150"> <br> Collab-Sphere - Ignite Your Open Source Journey! 🚀 </div>
 
-[![Deployed on VERCEL](https://img.shields.io/badge/Deployed%20on-Vercel-green?style=for-the-badge&logo=vercel)](https://collab-sphere-account-2-backup.vercel.app/)
+[![Deployed on NETLIFY](https://img.shields.io/badge/Deployed%20on-Netlify-Red?style=for-the-badge&logo=netlify)](https://thunderous-tanuki-dab88d.netlify.app/)
 
 Hey fellow coders! 👋 Ever felt that itch to contribute to open source but didn't know where to start? Or maybe you've got a cool project idea brewing and need some awesome collaborators? That's exactly why we built **Collab-Sphere**!
 
