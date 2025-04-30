@@ -136,22 +136,22 @@ npm run build
 We're still polishing the UI, but stay tuned! We'll be adding more screenshots here to give you a better visual taste of Collab-Sphere in action.
 
 ### Landing Page
-<img src="snips/land.png" alt="Landing Page" width="600">
+<img src="snips/land.png" alt="Landing Page" >
 
 ### User Home
-<img src="snips/home.png" alt="Home" width="600">
+<img src="snips/home.png" alt="Home" >
 
 ### Discover
-<img src="snips/discover.png" alt="Discover page" width="600">
+<img src="snips/discover.png" alt="Discover page" >
 
 ### Project Card
-<img src="snips/project.png" alt="Project Card" width="600">
+<img src="snips/project.png" alt="Project Card" >
 
 ### Dashboard
-<img src="snips/dash.png" alt="Dashboard" width="600">
+<img src="snips/dash.png" alt="Dashboard" >
 
 
-<img src="snips/stat.png" alt="Dash stats" width="600">
+<img src="snips/stat.png" alt="Dash stats" >
 
 ## 🙌 Contributing
 
