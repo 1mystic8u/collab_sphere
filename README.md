@@ -1,8 +1,9 @@
 # <div align="center"> <img src="public/logo.png" alt="Collab-Sphere Logo" width="150"> <br> Collab-Sphere - Ignite Your Open Source Journey! 🚀 </div>
 
-[![Deployed on NETLIFY](https://img.shields.io/badge/Deployed%20on-Netlify-Red?style=for-the-badge&logo=netlify)](https://thunderous-tanuki-dab88d.netlify.app/)
+[![Deployed on NETLIFY - ](https://img.shields.io/badge/Deployed%20on-Netlify-Red?style=for-the-badge&logo=netlify)](https://thunderous-tanuki-dab88d.netlify.app/)
 
 DEMO VIDEO - [video-link](demo.mp4)
+Watch on Loom - [link](https://www.loom.com/share/dc0c64587d1142428c4d6961a115520e?sid=ef17bfbc-6c14-4133-815f-8336705c8929)
 
 Hey fellow coders! 👋 Ever felt that itch to contribute to open source but didn't know where to start? Or maybe you've got a cool project idea brewing and need some awesome collaborators? That's exactly why we built **Collab-Sphere**!
 
