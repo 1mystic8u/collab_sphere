@@ -130,7 +130,7 @@ When you are ready to deploy your application, you can create an optimized produ
 *Using npm:*
 ```bash
 npm run build
-
+```
 ## 🖼️ Project UI Shots (Coming Soon!)
 
 We're still polishing the UI, but stay tuned! We'll be adding some screenshots here to give you a visual taste of Collab-Sphere in action.
