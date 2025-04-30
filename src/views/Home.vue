@@ -11,9 +11,9 @@ import Button from 'primevue/button';
         </router-link>
       </div>
       <nav class="nav-links">
-        <router-link to="/dashboard">projects</router-link>
-        <router-link to="/discover">discover</router-link>
-        <router-link to="/login">login</router-link>
+        <router-link to="/">Home</router-link>
+        <router-link to="/register">Register</router-link>
+        <router-link to="/login">Login</router-link>
       </nav>
     </div>
     

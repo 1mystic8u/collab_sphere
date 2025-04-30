@@ -252,7 +252,7 @@
   };
   
   const goToCreateProject = () => {
-    router.push('/project/create');
+    router.push('/create-project');
   };
   
   const viewProject = (projectId) => {

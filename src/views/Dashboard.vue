@@ -463,7 +463,7 @@ const getActivityIconClass = (type) => {
 };
 
 const goToCreateProject = () => {
-  router.push('/project/create');
+  router.push('/create-project');
 };
 
 const goToAllProjects = () => {
