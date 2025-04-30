@@ -73,25 +73,7 @@
         </Card>
       </div>
 
-      <div class="chart-section">
-        <Card>
-          <template #title>
-            <div class="card-header">
-              <span>User Activity</span>
-              <Dropdown 
-                v-model="activityPeriod" 
-                :options="activityPeriodOptions" 
-                optionLabel="label" 
-                optionValue="value" 
-                placeholder="Select Period"
-              />
-            </div>
-          </template>
-          <template #content>
-            <Chart type="bar" :data="activityChartData" :options="activityChartOptions" />
-          </template>
-        </Card>
-      </div>
+     
 
       <div class="main_content">
         <div class="projects-section" style="width: 100%;">
@@ -252,6 +234,27 @@
           </template>
         </Card>
       </div>
+      <br>
+      <div class="chart-section">
+        <Card>
+          <template #title>
+            <div class="card-header">
+              <span>User Activity(coming soon)</span>
+              <Dropdown 
+                v-model="activityPeriod" 
+                :options="activityPeriodOptions" 
+                optionLabel="label" 
+                optionValue="value" 
+                placeholder="Select Period"
+              />
+            </div>
+          </template>
+          <template #content>
+            <Chart type="bar" :data="activityChartData" :options="activityChartOptions" />
+          </template>
+        </Card>
+      </div>
+
     </div>
   </div>
 </template>
