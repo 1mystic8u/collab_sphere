@@ -175,7 +175,7 @@
         <div class="empty-state" v-else>
           <i class="pi pi-search"></i>
           <p>No interests yet. Explore projects to find collaborations.</p>
-          <Button label="Explore Projects" icon="pi pi-compass" class="p-button-outlined" />
+          <Button label="Explore Projects" icon="pi pi-compass" class="p-button-outlined" @click="goToAllProjects" />
         </div>
           </template>
         </Card>
@@ -470,7 +470,7 @@ const goToCreateProject = () => {
 };
 
 const goToAllProjects = () => {
-  router.push('/projects');
+  router.push('/discover');
 };
 
 const goToProjectDetails = (projectId) => {
