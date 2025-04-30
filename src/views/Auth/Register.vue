@@ -76,16 +76,16 @@
     errorMessage.value = '';
     
     try {
-      // Create user with email and password
+     
       const userCredential = await createUserWithEmailAndPassword(auth, email.value, password.value);
       const user = userCredential.user;
       
-      // Update user profile with display name
+   
       await updateProfile(user, {
         displayName: displayName.value
       });
       
-      // Store additional user info in Firestore
+   
       await setDoc(doc(db, "users", user.uid), {
         displayName: displayName.value,
         email: email.value,

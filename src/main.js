@@ -10,13 +10,11 @@ import Aura from '@primeuix/themes/aura';
 import PrimeVue from 'primevue/config';
 import 'primeicons/primeicons.css';
 
-// PrimeVue components
 
 
 const app = createApp(App);
 const pinia = createPinia();
 
-// Register PrimeVue
 
 app.use(PrimeVue, {
     theme: {
@@ -34,7 +32,6 @@ app.use(ConfirmationService);
 app.use(router);
 app.use(pinia);
 
-// Register PrimeVue components
 
 
 

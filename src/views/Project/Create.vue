@@ -131,7 +131,7 @@ import InputText from 'primevue/inputtext';
     try {
       const currentUser = auth.currentUser;
       
-      // Add project to Firestore
+
       const projectRef = await addDoc(collection(db, 'projects'), {
         title: projectData.title,
         description: projectData.description,
@@ -145,7 +145,7 @@ import InputText from 'primevue/inputtext';
         discussions: []
       });
       
-      // Update user's createdProjects array
+     
       await updateDoc(doc(db, 'users', currentUser.uid), {
         createdProjects: arrayUnion(projectRef.id)
       });

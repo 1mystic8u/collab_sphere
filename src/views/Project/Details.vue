@@ -12,7 +12,6 @@ import Chip from 'primevue/chip';
 import Textarea from 'primevue/textarea';
 import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
-// Removed InputText as it wasn't used
 
 
 // ai pane component 
@@ -23,50 +22,47 @@ const route = useRoute();
 const project = ref(null);
 const loading = ref(true);
 const isLoggedIn = ref(false);
-const currentUser = ref(null); // Store current user details
+const currentUser = ref(null); 
 const newDiscussion = ref('');
 const commentLoading = ref(false);
 const interestLoading = ref(false);
 
 
 
-// State for Edit Dialog
 const showEditDialog = ref(false);
 const editLoading = ref(false);
-const editFormData = reactive({ // Use reactive for nested object changes
+const editFormData = reactive({ 
     title: '',
     description: '',
-    skills: '', // Keep skills as a comma-separated string for editing ease
+    skills: '', 
 });
 
-// State for Delete
 const deleteLoading = ref(false);
 
 
 onMounted(async () => {
   const unsubscribe = auth.onAuthStateChanged(async (user) => {
     isLoggedIn.value = !!user;
-    currentUser.value = user; // Store user object
-    // Re-fetch or update computed properties if needed after login state changes
+    currentUser.value = user; 
+  
     if (project.value) {
-       // Potentially refresh computed properties if they depend heavily on currentUser state beyond just isLoggedIn
+     
     }
   });
 
   await fetchProjectDetails();
 
-  // Cleanup listener on unmount
-  // return () => unsubscribe(); // Vue 3 automatically handles this for onMounted async setup
+  
 });
 
 // --- UPDATE ---
 
 const openEditDialog = () => {
   if (!project.value) return;
-  // Pre-fill form data with current project details
+ 
   editFormData.title = project.value.title;
   editFormData.description = project.value.description;
-  // Join the computed skills array back into a comma-separated string for the input
+ 
   editFormData.skills = computedSkills.value.join(', ');
   showEditDialog.value = true;
 };
@@ -74,7 +70,7 @@ const openEditDialog = () => {
 const saveProjectChanges = async () => {
   if (!project.value || !editFormData.title || !editFormData.description) {
       console.error("Title and Description are required.");
-      // Optionally show a user-facing error message (e.g., using PrimeVue Toast)
+    
       return;
   }
 
@@ -84,57 +80,43 @@ const saveProjectChanges = async () => {
     const updatedData = {
       title: editFormData.title.trim(),
       description: editFormData.description.trim(),
-      // Split the string back into an array, trim whitespace, filter empty strings
+    
       skills: editFormData.skills.split(',').map(s => s.trim()).filter(Boolean),
-      // Add updatedAt timestamp?
-      // updatedAt: Timestamp.now()
+   
     };
 
     await updateDoc(projectRef, updatedData);
 
-    // Update local project state optimistically
+   
     project.value = {
-        ...project.value, // Keep existing fields like interested, discussions, etc.
-        ...updatedData, // Overwrite updated fields
-        // If you add updatedAt, handle its conversion to Date locally if needed
+        ...project.value,
+        ...updatedData, 
+       
     };
 
-    showEditDialog.value = false; // Close dialog on success
+    showEditDialog.value = false; 
     console.log('Project updated successfully!');
-     // Optionally show a success message (e.g., PrimeVue Toast)
+    
 
   } catch (error) {
     console.error('Error updating project:', error);
-     // Optionally show an error message
+    
   } finally {
     editLoading.value = false;
   }
 };
 
-// --- DELETE ---
+//delete ops
 
 const confirmDeleteProject = () => {
     if (!project.value) return;
 
-    // Simple browser confirmation (Replace with PrimeVue ConfirmDialog for better UX)
+  
     if (window.confirm(`Are you sure you want to delete the project "${project.value.title}"? This action cannot be undone.`)) {
         deleteProject();
     }
 
-    /* // Example using PrimeVue ConfirmationService
-    confirm.require({
-        message: `Are you sure you want to delete the project "${project.value.title}"? This action cannot be undone.`,
-        header: 'Confirm Deletion',
-        icon: 'pi pi-exclamation-triangle',
-        acceptClass: 'p-button-danger',
-        accept: () => {
-            deleteProject();
-        },
-        reject: () => {
-            // Optional: Callback for when user cancels
-        }
-    });
-    */
+    
 };
 
 
@@ -147,17 +129,16 @@ const deleteProject = async () => {
     await deleteDoc(projectRef);
 
     console.log('Project deleted successfully!');
-     // Optionally show a success message before redirecting
-
-    // Redirect user after successful deletion (e.g., to dashboard)
-    router.push('/dashboard'); // Or '/discover'
+   
+  
+    router.push('/dashboard');
 
   } catch (error) {
     console.error('Error deleting project:', error);
-    // Optionally show an error message
-    deleteLoading.value = false; // Keep user on page if deletion fails
+   
+    deleteLoading.value = false; 
   }
-  // No finally block needed for loading state if redirecting on success
+ 
 };
 
 const fetchProjectDetails = async () => {
@@ -173,38 +154,32 @@ const fetchProjectDetails = async () => {
     if (projectDoc.exists()) {
       const projectData = projectDoc.data();
 
-      // Convert Firestore Timestamp to JavaScript Date for createdAt
       if (projectData.createdAt && projectData.createdAt.toDate) {
         projectData.createdAt = projectData.createdAt.toDate();
       } else {
-        // Handle cases where createdAt might be missing or not a Timestamp
-        projectData.createdAt = new Date(); // Default or handle appropriately
+        projectData.createdAt = new Date(); 
       }
 
-      // Convert timestamps in discussions
       if (projectData.discussions && Array.isArray(projectData.discussions)) {
         projectData.discussions = projectData.discussions.map(discussion => {
-          let createdAtDate = new Date(); // Default date
+          let createdAtDate = new Date(); 
           if (discussion.createdAt && discussion.createdAt.toDate) {
              createdAtDate = discussion.createdAt.toDate();
           } else if (discussion.createdAt instanceof Date) {
-             createdAtDate = discussion.createdAt; // Already a Date object
+             createdAtDate = discussion.createdAt; 
           }
-          // Ensure user object exists
           const user = discussion.user || { displayName: 'Unknown User', uid: null };
           return {
             ...discussion,
             createdAt: createdAtDate,
             user: user
           };
-        }).sort((a, b) => a.createdAt - b.createdAt); // Sort discussions chronologically
+        }).sort((a, b) => a.createdAt - b.createdAt); 
       } else {
-        projectData.discussions = []; // Ensure discussions is always an array
+        projectData.discussions = []; 
       }
 
-      // Ensure interested is always an array
       projectData.interested = projectData.interested || [];
-      // Ensure createdBy exists
       projectData.createdBy = projectData.createdBy || { displayName: 'Unknown Creator', uid: null, email: 'N/A' };
 
 
@@ -218,78 +193,65 @@ const fetchProjectDetails = async () => {
     }
   } catch (error) {
     console.error('Error fetching project details:', error);
-    project.value = null; // Set project to null on error
+    project.value = null; 
   } finally {
     loading.value = false;
   }
 };
 
-// Computed property to check if the current user created the project
+// owner of projct
 const isCreator = computed(() => {
   if (!project.value || !currentUser.value) return false;
   return project.value.createdBy?.uid === currentUser.value?.uid;
 });
 
-// Computed property to check if the current user has expressed interest
+//interest check
 const hasExpressedInterest = computed(() => {
   if (!project.value || !currentUser.value) return false;
-  // Ensure interested array exists before checking
+  
   return project.value.interested?.some(user => user.uid === currentUser.value?.uid);
 });
 
-// Computed property to correctly split skills from Firestore data
 const computedSkills = computed(() => {
   if (!project.value || !project.value.skills) return [];
-  // Handle the case where skills is an array containing a single comma-separated string
   
     return project.value.skills ;
   
-  // Handle if skills is just a single string (less likely based on data, but safe)
   if (typeof project.value.skills === 'string') {
      return project.value.skills.split(',').map(sk => sk.trim()).filter(Boolean);
   }
-  // Handle if skills is already an array of individual strings
+
   if (Array.isArray(project.value.skills) && project.value.skills.every(s => typeof s === 'string')) {
-      // If it might contain comma-separated strings within the array
-      // return project.value.skills.flatMap(s => s.split(',').map(sk => sk.trim())).filter(Boolean);
-      // If it's guaranteed to be individual skills per array element:
+    
       return project.value.skills.filter(Boolean);
   }
-  return []; // Default empty array
+  return []; 
 });
 
 
 const expressInterest = async () => {
   if (!isLoggedIn.value || !currentUser.value) {
-    router.push('/login'); // Redirect to login if not logged in
+    router.push('/login'); 
     return;
   }
-  if (!project.value) return; // Don't proceed if project data isn't loaded
+  if (!project.value) return; 
 
   interestLoading.value = true;
   try {
-    const user = currentUser.value; // Use the stored user object
+    const user = currentUser.value; 
     const projectRef = doc(db, 'projects', project.value.id);
 
     const interestData = {
       uid: user.uid,
-      displayName: user.displayName || user.email || 'Anonymous', // Fallback display name
-      email: user.email || 'No Email Provided', // Store email
-      photoURL: user.photoURL || null // Store photoURL if available
+      displayName: user.displayName || user.email || 'Anonymous', 
+      email: user.email || 'No Email Provided',
+      photoURL: user.photoURL || null 
     };
 
-    // Add user to project's interested array in Firestore
     await updateDoc(projectRef, {
       interested: arrayUnion(interestData)
     });
 
-    // Optionally, update a user's profile with interested projects (if you have a 'users' collection)
-    // const userRef = doc(db, 'users', user.uid);
-    // await updateDoc(userRef, {
-    //   interestedProjects: arrayUnion(project.value.id)
-    // });
-
-    // Update local state optimistically
     if (project.value.interested) {
         project.value.interested.push(interestData);
     } else {
@@ -299,7 +261,6 @@ const expressInterest = async () => {
 
   } catch (error) {
     console.error('Error expressing interest:', error);
-    // Optionally show an error message to the user
   } finally {
     interestLoading.value = false;
   }
@@ -316,22 +277,19 @@ const addDiscussion = async () => {
 
     const discussionData = {
       content: newDiscussion.value,
-      createdAt: Timestamp.now(), // Use Firestore Timestamp for consistency
+      createdAt: Timestamp.now(), 
       user: {
         uid: user.uid,
         displayName: user.displayName || user.email || 'Anonymous',
-        email: user.email || 'No Email Provided', // Include email
-        photoURL: user.photoURL || null // Include photoURL
+        email: user.email || 'No Email Provided', 
+        photoURL: user.photoURL || null
       }
     };
 
-    // Add discussion to project in Firestore
     await updateDoc(projectRef, {
       discussions: arrayUnion(discussionData)
     });
 
-    // Update local state optimistically
-     // Convert Firestore Timestamp back to JS Date for local state consistency
     const discussionDataForLocalState = {
         ...discussionData,
         createdAt: discussionData.createdAt.toDate()
@@ -343,20 +301,17 @@ const addDiscussion = async () => {
        project.value.discussions = [discussionDataForLocalState];
     }
 
-    newDiscussion.value = ''; // Clear input field
+    newDiscussion.value = ''; 
 
   } catch (error) {
     console.error('Error adding discussion:', error);
-     // Optionally show an error message to the user
   } finally {
     commentLoading.value = false;
   }
 };
 
-// Keep formatDate for discussion timestamps
 const formatDate = (date) => {
   if (!date) return 'Date not available';
-  // Ensure it's a JS Date object
   const jsDate = date instanceof Date ? date : (date && date.toDate ? date.toDate() : null);
 
   if (!jsDate) return 'Invalid Date';
@@ -380,36 +335,36 @@ const formatDate = (date) => {
 <template>
   <div class="outer_enclose">
     <div class="page-container">
-      <!-- Loading State -->
+     
       <div v-if="loading" class="loading-state">
         <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
         <p>Loading project details...</p>
       </div>
 
-      <!-- Error State -->
+    
       <div v-else-if="!project" class="error-state">
         <p>Project not found or could not be loaded.</p>
         <Button label="Back to Discover" @click="router.push('/discover')" />
       </div>
 
-      <!-- Project Details -->
+     
       <template v-else>
-        <!-- Back Button -->
+       
         <div class="back-button-container">
           <Button
             label="< Back to Home"
             style="background-color: aliceblue;"
             @click="router.push('/home')" />
-            <!-- Assuming '/dashboard' is the correct route -->
+          
         </div>
 
-        <!-- Project Details Header Section -->
+      
         <div class="project-details-header">
             <h2>Project Details</h2>
             <p class="creator-info">Created by: {{ project.createdBy.email || project.createdBy.displayName }}</p>
         </div>
 
-        <!-- Interest Button -->
+       <br>
         <div class="interest-button-container">
             <Button
               v-if="isLoggedIn && !isCreator && !hasExpressedInterest"
@@ -419,6 +374,7 @@ const formatDate = (date) => {
               @click="expressInterest"
               :loading="interestLoading"
             />
+
             <Button
               v-else-if="isLoggedIn && !isCreator && hasExpressedInterest"
               label="Interested"
@@ -426,7 +382,7 @@ const formatDate = (date) => {
               class="p-button-raised p-button-success interest-button"
               disabled
             />
-            <!-- Optionally show something for the creator, or hide the button -->
+          
              <Button
               v-else-if="isLoggedIn && isCreator"
               label="My Project"
@@ -435,7 +391,6 @@ const formatDate = (date) => {
               disabled
             />
 
-             <!-- Creator Actions: Edit & Delete -->
              <div v-if="isLoggedIn && isCreator" class="creator-actions">
                 <Button
                     label="Edit Project"
@@ -454,12 +409,10 @@ const formatDate = (date) => {
         </div>
 
 
-        <!-- Description -->
         <p class="project-description">
             {{ project.description }}
         </p>
 
-        <!-- Required Skills -->
         <div class="skills-section">
             <h3>Required Skills</h3>
             <div class="skills-container">
@@ -468,7 +421,6 @@ const formatDate = (date) => {
             </div>
         </div>
 
-        <!-- Interested Students Summary -->
         <div class="interested-summary p-card p-component">
              <i class="pi pi-users icon"></i>
              <div class="summary-text">
@@ -477,7 +429,6 @@ const formatDate = (date) => {
              </div>
         </div>
 
-        <!-- Interested Students List -->
         <div class="interested-list" v-if="project.interested && project.interested.length > 0">
             <div v-for="user in project.interested" :key="user.uid" class="interested-user-item">
                 <Avatar :image="user.photoURL" icon="pi pi-user" shape="circle" size="large" />
@@ -491,14 +442,12 @@ const formatDate = (date) => {
              <p>Be the first to show interest!</p>
          </div>
 
-        <!-- Discussion Section -->
         <div class="discussion-section p-card p-component">
             <div class="discussion-header">
                 <i class="pi pi-comments icon"></i>
                 <h3 class="discussion-title">Discussion</h3>
             </div>
 
-            <!-- Existing Discussions -->
             <div v-if="project.discussions && project.discussions.length > 0" class="discussions-list">
                 <div v-for="(discussion, index) in project.discussions" :key="index" class="discussion-item">
                     <div class="discussion-item-header">
@@ -515,7 +464,6 @@ const formatDate = (date) => {
                 <p>No discussions yet. Start the conversation!</p>
             </div>
 
-            <!-- Add Comment Area -->
             <div v-if="isLoggedIn" class="add-discussion-area">
                 <Textarea
                     v-model="newDiscussion"
@@ -542,7 +490,6 @@ const formatDate = (date) => {
       </template>
 
 
-      <!-- Edit Project Dialog -->
       <Dialog
         v-model:visible="showEditDialog"
         modal
@@ -589,44 +536,36 @@ const formatDate = (date) => {
 
 <style scoped>
 
-/* Container for Interest/Edit/Delete buttons */
 .action-buttons-container {
-    /* Adjust positioning similar to the old interest-button-container */
-    margin-top: -60px; /* Pull buttons up - adjust if needed */
+    margin-top: -60px; 
     display: flex;
-    justify-content: flex-end; /* Align buttons to the right */
-    margin-bottom: 1rem; /* Space below buttons */
-    gap: 0.5rem; /* Space between buttons if multiple show */
-    height: 40px; /* Give it a fixed height to prevent layout shifts */
+    justify-content: flex-end; 
+    margin-bottom: 1rem; 
+    gap: 0.5rem; 
+    height: 40px; 
     align-items: center;
 }
 
-/* Style for the creator's action buttons */
 .creator-actions {
     display: flex;
-    gap: 0.5rem; /* Space between Edit and Delete */
+    gap: 0.5rem; 
 }
 
-.action-button.p-button-sm {
-    /* Ensure consistent size if needed */
-    /* height: 35px; */
-}
 
-/* Interest button specific style (if needed) */
+
 .interest-button {
-    min-width: 150px; /* Give button some width */
+    min-width: 150px; 
+    margin-bottom: 0.5rem;
 }
 
-/* Adjustments for responsive */
 @media (max-width: 768px) {
     .action-buttons-container {
-        margin-top: 1rem; /* Reset negative margin */
-        justify-content: flex-start; /* Align left on small screens */
+        margin-top: 1rem; 
+        justify-content: flex-start; 
         margin-bottom: 1rem;
     }
 }
 
-/* Styles for Edit Dialog Form */
 .p-dialog .field {
     margin-bottom: 1rem;
 }
@@ -641,17 +580,16 @@ const formatDate = (date) => {
     color: #6c757d;
 }
 
-/* Ensure dynamic title uses space correctly */
 .project-details-header h2 {
     margin-bottom: 0.25rem;
     font-size: 1.8rem;
     font-weight: bold;
-    word-break: break-word; /* Handle long titles */
+    word-break: break-word; 
 }
 
 .outer_enclose {
   display: grid;
-  grid-template-columns: 4fr 1fr; /* Single column layout */
+  grid-template-columns: 4fr 1fr; 
  
 }
 
@@ -660,12 +598,12 @@ const formatDate = (date) => {
 }
 
 .page-container {
-  max-width: 900px; /* Or your preferred max width */
+  max-width: 900px;
   margin: 1rem ;
   padding: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem; /* Spacing between sections */
+  gap: 1.5rem; 
 }
 
 
@@ -676,12 +614,12 @@ const formatDate = (date) => {
 }
 
 .back-button-container {
-    margin-bottom: 0.5rem; /* Less space below back button */
+    margin-bottom: 0.5rem;
 }
 
 .back-button.p-button-text {
     padding: 0.25rem 0.5rem;
-    color: #007bff; /* Standard link color */
+    color: #056d5b; 
     font-weight: normal;
 }
 .back-button .pi {
@@ -694,32 +632,30 @@ const formatDate = (date) => {
 
 .project-details-header h2 {
     margin-bottom: 0.25rem;
-    font-size: 1.8rem; /* Slightly larger title */
+    font-size: 1.8rem; 
     font-weight: bold;
 }
 
 .creator-info {
-    color: #6b7280; /* Gray text */
+    color: #6b7280; 
     font-size: 0.9rem;
-    margin-bottom: 1rem; /* Space before description */
+    margin-bottom: 1rem; 
 }
 
-/* Position Interest Button - Adjust as needed */
 .interest-button-container {
-    margin-top: -60px; /* Pull button up */
-    display: flex;
-    justify-content: flex-end; /* Align button to the right */
-    margin-bottom: 1rem; /* Space below button */
+    margin-top: -60px; 
+    justify-content: flex-end; 
+    margin-bottom: 1rem; 
 }
 
 .interest-button {
-    min-width: 150px; /* Give button some width */
+    min-width: 150px; 
 }
 
 
 .project-description {
   line-height: 1.6;
-  margin-bottom: 1.5rem; /* Space below description */
+  margin-bottom: 1.5rem; 
   color: #333;
 }
 
@@ -743,21 +679,20 @@ const formatDate = (date) => {
   font-size: 0.85rem;
 }
 
-/* Interested Students Summary Box */
 .interested-summary {
     display: flex;
     align-items: center;
     gap: 1rem;
-    background-color: #e0f7fa; /* Light cyan background like mockup */
+    background-color: #e0f7fa; 
     border: 1px solid #b2ebf2;
     border-radius: 8px;
     padding: 1rem;
-    margin-bottom: 1rem; /* Space before the list */
+    margin-bottom: 1rem; 
 }
 
 .interested-summary .icon {
     font-size: 2rem;
-    color: #0097a7; /* Darker cyan */
+    color: #0097a7; 
 }
 .interested-summary .summary-text {
     flex-grow: 1;
@@ -765,23 +700,21 @@ const formatDate = (date) => {
 .interested-summary .summary-title {
     font-weight: bold;
     font-size: 1.1rem;
-    display: block; /* Ensures title is on its own line */
+    display: block; 
     margin-bottom: 0.25rem;
 }
 .interested-summary .summary-count {
     color: #555;
-    margin: 0; /* Reset paragraph margin */
+    margin: 0; 
     font-size: 0.9rem;
 }
 
 
-/* Interested Students List */
 .interested-list {
     display: grid;
-    /* grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); */
-    grid-template-columns: repeat(3, 1fr); /* Fixed 3 columns */
-    gap: 1.5rem; /* Space between user items */
-    margin-bottom: 1.5rem; /* Space below list */
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 1.5rem;
+    margin-bottom: 1.5rem; 
 }
 
 .interested-list-empty {
@@ -796,11 +729,11 @@ const formatDate = (date) => {
 .interested-user-item {
     display: flex;
     align-items: center;
-    gap: 0.75rem; /* Space between avatar and text */
-    background-color: #fff; /* Optional: background for each item */
-    padding: 0.75rem; /* Optional: padding */
-    border-radius: 6px; /* Optional: rounded corners */
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1); /* Optional: subtle shadow */
+    gap: 0.75rem; 
+    background-color: #fff; 
+    padding: 0.75rem; 
+    border-radius: 6px; 
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
 }
 
 .interested-user-item .user-info {
@@ -815,13 +748,13 @@ const formatDate = (date) => {
 
 .interested-user-item .user-email {
     font-size: 0.85rem;
-    color: #6c757d; /* Gray text for email */
-    word-break: break-all; /* Prevent long emails overflowing */
+    color: #6c757d; 
+    word-break: break-all;
 }
 
 /* Discussion Section Card */
 .discussion-section {
-    background-color: #e0f7fa; /* Same background as interested summary */
+    background-color: #e0f7fa; 
     border: 1px solid #b2ebf2;
     border-radius: 8px;
     padding: 1.5rem;
@@ -838,17 +771,16 @@ const formatDate = (date) => {
     color: #0097a7;
 }
 .discussion-header .discussion-title {
-    margin: 0; /* Reset heading margin */
+    margin: 0;
      font-size: 1.2rem;
      font-weight: 600;
 }
 
-/* Discussion List Styling */
 .discussions-list {
-    margin-bottom: 1.5rem; /* Space before add comment area */
+    margin-bottom: 1.5rem;
     display: flex;
     flex-direction: column;
-    gap: 1.5rem; /* Space between discussion items */
+    gap: 1.5rem; 
 }
 
 .no-discussions, .login-prompt {
@@ -866,7 +798,7 @@ const formatDate = (date) => {
 
 
 .discussion-item {
-    background-color: #fff; /* White background for each comment */
+    background-color: #fff; 
     padding: 1rem;
     border-radius: 6px;
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
@@ -892,59 +824,56 @@ const formatDate = (date) => {
 }
 
 .discussion-content {
-    margin: 0.5rem 0 0 0; /* Adjust margin as needed */
+    margin: 0.5rem 0 0 0;
     font-size: 0.95rem;
     line-height: 1.5;
     color: #333;
-     white-space: pre-wrap; /* Preserve line breaks */
-     word-wrap: break-word; /* Break long words */
+     white-space: pre-wrap; 
+     word-wrap: break-word;
 }
 
 
-/* Add Comment Area */
 .add-discussion-area {
     display: flex;
-    flex-direction: column; /* Stack textarea and button */
-    gap: 0.5rem; /* Space between textarea and button */
+    flex-direction: column; 
+    gap: 0.5rem; 
     margin-top: 1rem;
-    border-top: 1px solid #dee2e6; /* Separator line */
+    border-top: 1px solid #dee2e6; 
     padding-top: 1rem;
 }
 
 .comment-textarea {
-    font-size: 0.95rem; /* Make textarea text slightly larger */
+    font-size: 0.95rem;
     border-radius: 6px;
 }
 .comment-textarea::placeholder {
-  color: #999; /* Lighter placeholder text */
+  color: #999;
 }
 
 .post-comment-button {
-    align-self: flex-end; /* Align button to the right */
+    align-self: flex-end; 
 }
 
-/* Ensure PrimeVue Card default padding/margin don't interfere too much */
 :deep(.p-card .p-card-content) {
-    padding: 0; /* Remove default card content padding if sections handle it */
+    padding: 0; 
 }
 :deep(.p-card .p-card-body) {
-    padding: 1rem; /* Adjust body padding if needed */
+    padding: 1rem; 
 }
 
-/* Responsive adjustments if necessary */
 @media (max-width: 768px) {
     .interested-list {
-        grid-template-columns: repeat(2, 1fr); /* 2 columns on smaller screens */
+        grid-template-columns: repeat(2, 1fr); 
     }
     .interest-button-container {
-        margin-top: 1rem; /* Reset negative margin */
-        justify-content: flex-start; /* Align left on small screens */
+        margin-top: 1rem; 
+        justify-content: flex-start;
         margin-bottom: 1rem;
     }
 }
 @media (max-width: 576px) {
      .interested-list {
-        grid-template-columns: 1fr; /* 1 column on very small screens */
+        grid-template-columns: 1fr; 
     }
     .project-details-header h2 {
         font-size: 1.5rem;

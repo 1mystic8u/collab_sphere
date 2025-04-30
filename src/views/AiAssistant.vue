@@ -28,14 +28,13 @@ const githubError = ref('');
 const activeTab = ref(0);
 const contributionGuide = ref('');
 
-// Initialize services
 const githubService = new GitHubService();
 const genAI = new GoogleGenAI({ apiKey: import.meta.env.VITE_GOOGLE_AI_API_KEY });
 
 
 const formatAIResponseToHTML = (text) =>{
   if (!text || typeof text !== 'string') {
-    return ''; // Return empty string for null, undefined, or non-string input
+    return ''; 
   }
 
   let html = text;
@@ -67,7 +66,7 @@ const formatAIResponseToHTML = (text) =>{
    html = html.replace(/```(?:\w+)?\n([\s\S]*?)\n```/g, (match, code) => {
   // Escape HTML entities inside the code
   const escapedCode = code
-    .replace(/&/g, '&amp;') // Important to do first
+    .replace(/&/g, '&amp;') 
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
   
@@ -111,7 +110,6 @@ const formatAIResponseToHTML = (text) =>{
 };
 
 
-// Function to generate AI suggestions based on project data
 const generateAISuggestions = async () => {
   if (!props.project) return;
   
@@ -119,7 +117,6 @@ const generateAISuggestions = async () => {
   errorMessage.value = '';
   
   try {
-    // Extract relevant project information
     const projectInfo = {
       title: props.project.title,
       description: props.project.description,
@@ -129,7 +126,6 @@ const generateAISuggestions = async () => {
       recentDiscussions: props.project.discussions.slice(-3).map(d => d.content)
     };
     
-    // Create prompt for the AI
     const prompt = `
     You are CollabHelper, an AI assistant for Collab-Sphere, a platform for students to collaborate on coding projects.
     
@@ -170,7 +166,6 @@ const generateAISuggestions = async () => {
   }
 };
 
-// Function to fetch GitHub repository data
 const fetchGitHubData = async () => {
   if (!githubUrl.value) {
     githubError.value = 'Please enter a GitHub repository URL';
@@ -190,7 +185,6 @@ const fetchGitHubData = async () => {
     
     githubData.value = data;
     
-    // Generate contribution guide from GitHub data
     await generateContributionGuide(data);
     
   } catch (error) {
@@ -201,14 +195,12 @@ const fetchGitHubData = async () => {
   }
 };
 
-// Generate AI-powered contribution guide based on GitHub data
 const generateContributionGuide = async (githubData) => {
   if (!githubData || !githubData.success) return;
   
   isLoading.value = true;
   
   try {
-    // Create a detailed prompt for the AI with GitHub data
     let prompt = `
     You are CollabHelper, an AI assistant that helps new contributors get started with GitHub projects.
     
@@ -219,7 +211,6 @@ const generateContributionGuide = async (githubData) => {
     Topics: ${githubData.repoDetails.topics.join(', ') || 'None'}
     `;
     
-    // Add README information if available
     if (githubData.readme && githubData.readme.content) {
       prompt += `
       README Content Summary:
@@ -227,7 +218,6 @@ const generateContributionGuide = async (githubData) => {
       `;
     }
     
-    // Add CONTRIBUTING.md information if available
     if (githubData.contributing && githubData.contributing.content) {
       prompt += `
       CONTRIBUTING.md Content Summary:
@@ -235,7 +225,6 @@ const generateContributionGuide = async (githubData) => {
       `;
     }
     
-    // Add beginner-friendly issues if available
     if (githubData.beginnerIssues && githubData.beginnerIssues.length > 0) {
       prompt += `
       Beginner-Friendly Issues:
@@ -268,7 +257,6 @@ const generateContributionGuide = async (githubData) => {
     contributionGuide.value = formatAIResponseToHTML(result.text);
    
     
-    // Automatically switch to the contribution guide tab
     activeTab.value = 1;
     
   } catch (error) {
@@ -279,14 +267,12 @@ const generateContributionGuide = async (githubData) => {
   }
 };
 
-// Generate a "vibe check" for the project
 const generateVibeCheck = async () => {
   if (!props.project) return;
   
   isLoading.value = true;
   
   try {
-    // Extract discussions for sentiment analysis
     const discussions = props.project.discussions.map(d => d.content).join('\n\n');
     
     const prompt = `

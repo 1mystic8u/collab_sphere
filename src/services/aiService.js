@@ -1,11 +1,8 @@
-// src/services/aiService.js
+
 
 import { GoogleGenAI } from '@google/genai';
 import aiConfig from '../config/aiConfig';
 
-/**
- * Service for interacting with Google's Generative AI (Gemini)
- */
 export default class AiService {
   constructor() {
     this.apiKey = aiConfig.getApiKey();
@@ -14,18 +11,18 @@ export default class AiService {
   }
 
   /**
-   * Check if the AI service is properly configured
-   * @returns {boolean} Whether the service is ready
+   * config
+   * @returns {boolean} T/F 
    */
   isConfigured() {
     return !!this.genAI;
   }
 
   /**
-   * Generate content using Google's Generative AI
-   * @param {string} prompt - The prompt to send to the AI
-   * @param {Object} options - Optional configuration
-   * @returns {Promise<string>} The generated text
+   * Generate 
+   * @param {string} prompt 
+   * @param {Object} options 
+   * @returns {Promise<string>} 
    */
   async generateContent(prompt, options = {}) {
     if (!this.isConfigured()) {
@@ -53,9 +50,9 @@ export default class AiService {
   }
 
   /**
-   * Generate project insights based on project data
-   * @param {Object} project - Project data
-   * @returns {Promise<string>} AI insights
+   * insights
+   * @param {Object} project 
+   * @returns {Promise<string>} 
    */
   async generateProjectInsights(project) {
     const projectInfo = {
@@ -92,9 +89,9 @@ export default class AiService {
   }
 
   /**
-   * Generate a contribution guide based on GitHub repository data
-   * @param {Object} githubData - Data from GitHub repository
-   * @returns {Promise<string>} Contribution guide
+   * contribution guide 
+   * @param {Object} githubData  GitHub 
+   * @returns {Promise<string>}
    */
   async generateContributionGuide(githubData) {
     if (!githubData || !githubData.success) {
@@ -111,7 +108,7 @@ export default class AiService {
     Topics: ${githubData.repoDetails.topics.join(', ') || 'None'}
     `;
     
-    // Add README information if available
+    // Add README 
     if (githubData.readme && githubData.readme.content) {
       prompt += `
       README Content Summary:
@@ -119,7 +116,7 @@ export default class AiService {
       `;
     }
     
-    // Add CONTRIBUTING.md information if available
+    // Add CONTRIBUTING.md
     if (githubData.contributing && githubData.contributing.content) {
       prompt += `
       CONTRIBUTING.md Content Summary:
@@ -127,7 +124,7 @@ export default class AiService {
       `;
     }
     
-    // Add beginner-friendly issues if available
+    // Add beginner-friendly issues 
     if (githubData.beginnerIssues && githubData.beginnerIssues.length > 0) {
       prompt += `
       Beginner-Friendly Issues:
@@ -154,9 +151,9 @@ export default class AiService {
   }
 
   /**
-   * Generate a "vibe check" for project discussions
-   * @param {Object} project - Project data
-   * @returns {Promise<string>} Vibe check analysis
+   *  "vibe check"
+   * @param {Object} project 
+   * @returns {Promise<string>} 
    */
   async generateVibeCheck(project) {
     const discussions = project.discussions.map(d => d.content).join('\n\n');
@@ -183,9 +180,9 @@ export default class AiService {
   }
 
   /**
-   * Generate skill matching recommendations
-   * @param {Object} project - Project data
-   * @param {Object} user - User data with skills
+   * recommendations
+   * @param {Object} project 
+   * @param {Object} user 
    * @returns {Promise<string>} Skill matching recommendations
    */
   async generateSkillMatching(project, user) {
@@ -213,10 +210,10 @@ export default class AiService {
   }
 
   /**
-   * Answer a custom question about the project
-   * @param {string} question - The user's question
-   * @param {Object} project - Project data
-   * @returns {Promise<string>} AI response
+   *  custom question
+   * @param {string} question
+   * @param {Object} project 
+   * @returns {Promise<string>} 
    */
   async answerProjectQuestion(question, project) {
     const prompt = `

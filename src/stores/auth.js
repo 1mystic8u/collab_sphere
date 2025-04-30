@@ -4,14 +4,14 @@ import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebas
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    user: undefined, // Start as undefined until first check
-    isAuthReady: false, // Flag for initial auth check completion
-    unsubscribe: null, // To store the unsubscribe function
+    user: undefined,
+    isAuthReady: false, 
+    unsubscribe: null, 
   }),
   actions: {
     init() {
-      console.log("Auth Store: init() called."); // Log init call
-      // Prevent multiple initializations if called again
+      console.log("Auth Store: init() called."); 
+     
       if (this.unsubscribe) {
           console.log("Auth Store: Already initialized.");
           return;
@@ -23,14 +23,14 @@ export const useAuthStore = defineStore('auth', {
         this.user = u;
         if (!this.isAuthReady) {
           console.log("Auth Store: Setting isAuthReady = true.");
-          this.isAuthReady = true; // Mark auth as ready on first callback
+          this.isAuthReady = true; 
         }
       }, error => {
         console.error("Auth Store: onAuthStateChanged error:", error);
-        this.user = null; // Set user to null on error
+        this.user = null;
         if (!this.isAuthReady) {
           console.log("Auth Store: Setting isAuthReady = true (on error).");
-          this.isAuthReady = true; // Also mark as ready on error to unblock router
+          this.isAuthReady = true; 
         }
       });
     },

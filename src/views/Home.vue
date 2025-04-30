@@ -4,7 +4,6 @@ import Button from 'primevue/button';
 
 <template>
   <div class="app-container">
-    <!-- Header -->
     <div class="app-header">
       <div class="logo">
         <router-link to="/">
@@ -18,7 +17,6 @@ import Button from 'primevue/button';
       </nav>
     </div>
     
-    <!-- Hero Section -->
     <div class="hero-section">
       <div class="hero-content">
         <h1>The best app in the world!</h1>
@@ -40,10 +38,8 @@ import Button from 'primevue/button';
       </div>
     </div>
     
-    <!-- Slanted Divider -->
     <div class="slanted-divider"></div>
     
-    <!-- Features Section (Preserved from original) -->
     <div class="features-section">
       <div class="feature-card">
         <i class="pi pi-search feature-icon"></i>
@@ -243,7 +239,7 @@ onMounted(() => {
 .phone-front {
   position: relative;
   overflow: hidden;
-  border: 8px solid white; /* Creates the phone bezel */
+  border: 8px solid white;
   box-sizing: border-box;
 }
 
@@ -253,12 +249,11 @@ onMounted(() => {
   left: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover; /* Makes the image cover the entire container */
-  object-position: center; /* Centers the image */
-  border-radius: 16px; /* Slightly smaller than the phone border radius */
+  object-fit: cover; 
+  object-position: center; 
+  border-radius: 16px;
 }
 
-/* Optional: Add a subtle inner shadow to enhance the phone screen look */
 .phone-front::after {
   content: '';
   position: absolute;

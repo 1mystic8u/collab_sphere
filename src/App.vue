@@ -29,15 +29,12 @@ onMounted(() => {
 <template>
   <div class="app-container">
 
-  <!-- Dark Mode Toggle Button -->
   <button @click="toggleDarkMode" class="dark-mode-toggle">
     <i :class="darkModeEnabled ? 'pi pi-sun' : 'pi pi-moon'"></i>
   </button>
 
-  <!-- Show the full layout ONLY if the user is logged in -->
   <template v-if="isLoggedIn">
     <div class="layout-wrapper">
-    <!-- Sidebar -->
     <div class="sidebar">
       <div class="sidebar-header">
       <div class="logo">
@@ -46,7 +43,6 @@ onMounted(() => {
       </div>
       <div class="sidebar-menu">
        <ul>
-         <!-- Links relevant when logged in -->
          <li><router-link to="/home"><i class="pi pi-home"></i><span>Home</span></router-link></li>
          <li><router-link to="/discover"><i class="pi pi-search"></i><span>Discover Projects</span></router-link></li>
          <li><router-link to="/dashboard"><i class="pi pi-th-large"></i><span>Dashboard</span></router-link></li>
@@ -61,7 +57,6 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Main Content Area (for logged-in state) -->
     <div class="main-content">
       <header class="top-bar">
        <div class="menu-toggle">
@@ -75,16 +70,13 @@ onMounted(() => {
        </div>
       </header>
       <div class="content">
-       <!-- This router-view renders components for logged-in users -->
        <router-view :key="$route.fullPath" />
       </div>
     </div>
     </div>
   </template>
 
-  <!-- Show only the routed component if the user is logged OUT -->
   <template v-else>
-     <!-- This router-view renders Login, Register, public pages etc. -->
      <router-view :key="$route.fullPath" />
   </template>
 
@@ -109,19 +101,16 @@ onMounted(() => {
 const handleLogout = async () => {
   try {
   await signOut(auth);
-  // No need to push here if onAuthStateChanged handles redirect logic via router guards
-  // If not using guards, you might still need: router.push('/login');
+
   console.log('Logout successful');
   } catch (error) {
   console.error('Logout error:', error);
   }
 };
 
-// No PrimeVue imports needed directly in App.vue unless used in this specific template
 </script>
 
 <style>
-/* Styles remain the same */
 
 .dark-mode-toggle {
   position: fixed;
@@ -133,7 +122,7 @@ const handleLogout = async () => {
   cursor: pointer;
   font-size: 1.5rem;
   color: #555;
-  z-index: 1000; /* Ensure it's above other elements */
+  z-index: 1000; 
 }
 
 
@@ -151,21 +140,18 @@ body {
   line-height: 1.6;
 }
 
-/* App Container - Ensure it takes full height if needed */
 .app-container {
   min-height: 100vh;
-  display: flex; /* Use flex to manage layout */
-  flex-direction: column; /* Stack elements vertically */
+  display: flex; 
+  flex-direction: column; 
 }
 
-/* Layout Structure (Only applies when logged in) */
 .layout-wrapper {
   display: flex;
-  flex-grow: 1; /* Allow wrapper to grow and fill space */
-  min-height: 100vh; /* Ensure it takes at least full viewport height */
+  flex-grow: 1; 
+  min-height: 100vh; 
 }
 
-/* Sidebar */
 .sidebar {
   width: 260px;
   background-color: #fff;
@@ -174,10 +160,10 @@ body {
   flex-direction: column;
   height: 100vh;
   position: fixed;
-  left: 0; /* Ensure it starts at the left */
-  top: 0; /* Ensure it starts at the top */
+  left: 0; 
+  top: 0; 
   z-index: 999;
-  transition: width 0.3s ease; /* Added transition */
+  transition: width 0.3s ease;
 }
 
 .sidebar-header {
@@ -215,8 +201,8 @@ body {
   color: #555;
   text-decoration: none;
   transition: all 0.3s ease;
-  white-space: nowrap; /* Prevent text wrapping */
-  overflow: hidden; /* Hide overflow */
+  white-space: nowrap; 
+  overflow: hidden; 
 }
 
 .sidebar-menu a:hover,
@@ -228,7 +214,7 @@ body {
 .sidebar-menu i {
   margin-right: 0.75rem;
   font-size: 1.25rem;
-  flex-shrink: 0; /* Prevent icon from shrinking */
+  flex-shrink: 0;
 }
 .sidebar-menu span {
    transition: opacity 0.3s ease, width 0.3s ease; /* Add transition for text */
@@ -238,8 +224,8 @@ body {
 .sidebar-footer {
   padding: 1rem 1.5rem;
   border-top: 1px solid #f0f0f0;
-  white-space: nowrap; /* Prevent text wrapping */
-  overflow: hidden; /* Hide overflow */
+  white-space: nowrap; 
+  overflow: hidden; 
 }
 
 .user-profile {
@@ -256,7 +242,7 @@ body {
   align-items: center;
   justify-content: center;
   margin-right: 0.75rem;
-  flex-shrink: 0; /* Prevent avatar from shrinking */
+  flex-shrink: 0; 
 }
 
 .user-avatar i {
@@ -266,16 +252,15 @@ body {
 
 .user-info span {
   font-weight: 500;
-  transition: opacity 0.3s ease, width 0.3s ease; /* Add transition for text */
+  transition: opacity 0.3s ease, width 0.3s ease;
 }
 
-/* Main Content (Only applies when logged in) */
 .main-content {
   flex: 1;
-  margin-left: 260px; /* Should match sidebar width */
+  margin-left: 260px; 
   display: flex;
   flex-direction: column;
-  transition: margin-left 0.3s ease; /* Added transition */
+  transition: margin-left 0.3s ease; 
 }
 
 .top-bar {
@@ -331,24 +316,16 @@ body {
   background-color: #f9f9f9;
 }
 
-/* Styles for Logged-Out State */
-/* You might want specific styles for the logged-out container if needed */
-/* e.g., centering the login form */
+
 template:not([v-if="isLoggedIn"]) > div { 
 
 
   margin-top : 0.1rem;
-  /* Example targeting the container of logged-out view */
-   /* display: flex; */
-   /* justify-content: center; */
-   /* align-items: center; */
-   /* min-height: 100vh; */
+
 }
 
 
-/* Responsive Adjustments */
 @media (max-width: 992px) {
-  /* Only apply sidebar collapse if logged in */
   .layout-wrapper .sidebar {
   width: 80px;
   }

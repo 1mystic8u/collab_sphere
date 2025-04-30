@@ -1,8 +1,4 @@
-// src/services/githubService.js
 
-/**
- * Service for interacting with the GitHub API
- */
 export default class GitHubService {
     constructor(token = null) {
       this.baseUrl = 'https://api.github.com';
@@ -16,15 +12,15 @@ export default class GitHubService {
     }
   
     /**
-     * Parse a GitHub URL to extract owner and repo
-     * @param {string} url - GitHub repository URL
-     * @returns {Object} - { owner, repo }
+     * parse gitHub URL 
+     * @param {string} url 
+     * @returns {Object} 
      */
     parseGitHubUrl(url) {
       if (!url) return null;
       
       try {
-        // Handle different GitHub URL formats
+       
         const regex = /github\.com\/([^\/]+)\/([^\/]+)/;
         const match = url.match(regex);
         
@@ -42,10 +38,10 @@ export default class GitHubService {
     }
   
     /**
-     * Fetch repository details including README
-     * @param {string} owner - Repository owner
-     * @param {string} repo - Repository name
-     * @returns {Promise} - Repository data
+     * repo details
+     * @param {string} owner 
+     * @param {string} repo 
+     * @returns {Promise}
      */
     async getRepositoryDetails(owner, repo) {
       try {
@@ -65,10 +61,10 @@ export default class GitHubService {
     }
   
     /**
-     * Fetch repository README content
-     * @param {string} owner - Repository owner
-     * @param {string} repo - Repository name
-     * @returns {Promise} - README content
+     * readme content
+     * @param {string} owner 
+     * @param {string} repo 
+     * @returns {Promise} 
      */
     async getReadmeContent(owner, repo) {
       try {
@@ -78,14 +74,14 @@ export default class GitHubService {
         
         if (!response.ok) {
           if (response.status === 404) {
-            return null; // README doesn't exist
+            return null; 
           }
           throw new Error(`GitHub API error: ${response.status}`);
         }
         
         const data = await response.json();
         
-        // GitHub returns the content as base64 encoded
+       
         if (data.content && data.encoding === 'base64') {
           return atob(data.content);
         }
@@ -98,28 +94,28 @@ export default class GitHubService {
     }
   
     /**
-     * Fetch repository CONTRIBUTING.md content
-     * @param {string} owner - Repository owner
-     * @param {string} repo - Repository name
-     * @returns {Promise} - CONTRIBUTING.md content
+     * fetch repo (contributions)
+     * @param {string} owner 
+     * @param {string} repo 
+     * @returns {Promise} 
      */
     async getContributingContent(owner, repo) {
       try {
-        // Try to fetch CONTRIBUTING.md directly
+       
         const response = await fetch(`${this.baseUrl}/repos/${owner}/${repo}/contents/CONTRIBUTING.md`, {
           headers: this.headers
         });
         
         if (!response.ok) {
           if (response.status === 404) {
-            return null; // CONTRIBUTING.md doesn't exist
+            return null;
           }
           throw new Error(`GitHub API error: ${response.status}`);
         }
         
         const data = await response.json();
         
-        // GitHub returns the content as base64 encoded
+       
         if (data.content && data.encoding === 'base64') {
           return atob(data.content);
         }
@@ -132,14 +128,14 @@ export default class GitHubService {
     }
   
     /**
-     * Fetch beginner-friendly issues
-     * @param {string} owner - Repository owner
-     * @param {string} repo - Repository name
-     * @returns {Promise} - Array of beginner-friendly issues
+     * fetch beginner-friendly issues
+     * @param {string} owner 
+     * @param {string} repo 
+     * @returns {Promise} 
      */
     async getBeginnerFriendlyIssues(owner, repo) {
       try {
-        // Look for common beginner issue labels
+        // find common beginner issue labels
         const labels = [
           'good-first-issue',
           'good first issue',
@@ -149,7 +145,7 @@ export default class GitHubService {
           'starter'
         ];
         
-        // Create the query string for labels
+      
         const labelQuery = labels.map(label => `label:"${label}"`).join('+OR+');
         
         const response = await fetch(
@@ -170,9 +166,9 @@ export default class GitHubService {
     }
   
     /**
-     * Get a comprehensive project context for AI analysis
-     * @param {string} repoUrl - GitHub repository URL
-     * @returns {Promise} - Project context for AI
+     *  context for AI analysis
+     * @param {string} repoUrl 
+     * @returns {Promise} 
      */
     async getProjectContextForAI(repoUrl) {
       const repoInfo = this.parseGitHubUrl(repoUrl);
@@ -186,7 +182,7 @@ export default class GitHubService {
       try {
         const { owner, repo } = repoInfo;
         
-        // Fetch all data in parallel
+       
         const [repoDetails, readmeContent, contributingContent, beginnerIssues] = await Promise.all([
           this.getRepositoryDetails(owner, repo),
           this.getReadmeContent(owner, repo),
@@ -194,7 +190,7 @@ export default class GitHubService {
           this.getBeginnerFriendlyIssues(owner, repo)
         ]);
         
-        // Process issues to get simplified data
+        // Process issues
         const processedIssues = beginnerIssues.slice(0, 5).map(issue => ({
           number: issue.number,
           title: issue.title,

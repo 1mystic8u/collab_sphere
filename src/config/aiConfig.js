@@ -1,8 +1,4 @@
-// src/config/aiConfig.js
 
-/**
- * Configuration for Google Generative AI integration
- */
 export default {
     // Function to safely get the API key from environment variables
     getApiKey: () => {
@@ -25,11 +21,11 @@ export default {
       maxOutputTokens: 1024,
     },
     
-    // Helper function for error handling
+    //  error handling
     handleAiError: (error) => {
       console.error('AI API Error:', error);
       
-      // Extract the most useful error message
+      //error message
       if (error.response) {
         return `API Error: ${error.response.status} - ${error.response.data?.error?.message || 'Unknown error'}`;
       }

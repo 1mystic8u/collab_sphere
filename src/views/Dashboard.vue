@@ -1,7 +1,6 @@
 ```vue
 <template>
   <div class="dashboard-container">
-    <!-- Header Section with Summary Stats -->
     <div class="dashboard-header">
       <h1>Dashboard</h1>
     </div>
@@ -18,7 +17,6 @@
     </div>
 
     <div class="dashboard-content" v-else>
-      <!-- Summary Stats Cards -->
       <div class="summary-stats">
         <Card class="welcome-card">
           <template #content>
@@ -75,7 +73,6 @@
         </Card>
       </div>
 
-      <!-- Activity Chart Section -->
       <div class="chart-section">
         <Card>
           <template #title>
@@ -96,9 +93,7 @@
         </Card>
       </div>
 
-      <!-- Main Content Area -->
       <div class="main_content">
-        <!-- My Projects Section -->
         <div class="projects-section" style="width: 100%;">
           <Card style="width: 100%;">
         <template #title>
@@ -165,7 +160,6 @@
           </Card>
         </div>
 
-        <!-- Projects by Skills Pie Chart -->
         <Card class="skills-chart-card" style="width: 100%;">
           <template #title>Projects by Skills</template>
           <template #content>
@@ -173,7 +167,6 @@
           </template>
         </Card>
 
-        <!-- Interested Projects -->
         <Card class="interested-projects-card" style="width: 100%;">
           <template #title>Interested Projects</template>
           <template #content>
@@ -207,9 +200,7 @@
       </div>
 
       
-      <!-- Recent Activity and Discussions Section -->
       <div class="activity-discussion">
-        <!-- Recent Activity Timeline -->
         <Card class="activity-card">
           <template #title>Recent Activity</template>
           <template #content>
@@ -236,7 +227,6 @@
           </template>
         </Card>
 
-        <!-- Recent Discussions -->
         <Card class="discussions-card">
           <template #title>Recent Discussions</template>
           <template #content>
@@ -269,10 +259,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { auth, db } from '../firebase'; // Adjust path if needed
+import { auth, db } from '@/firebase/index.js'; 
 import { collection, query, where, getDocs, doc, getDoc, orderBy, limit } from 'firebase/firestore';
 
-// PrimeVue Components
 import Card from 'primevue/card';
 import Button from 'primevue/button';
 import ProgressSpinner from 'primevue/progressspinner';
@@ -297,7 +286,6 @@ const recentDiscussions = ref([]);
 const totalComments = ref(0);
 
 
-// Activity chart state
 const activityPeriod = ref('week');
 const activityPeriodOptions = [
   { label: 'This Week', value: 'week' },
@@ -305,7 +293,6 @@ const activityPeriodOptions = [
   { label: 'This Year', value: 'year' }
 ];
 
-// Load dashboard data
 const loadDashboardData = async () => {
   loading.value = true;
   error.value = null;
@@ -319,7 +306,6 @@ const loadDashboardData = async () => {
   user.value = currentUser;
 
   try {
-    // Fetch projects created by the user
     const myProjectsQuery = query(
       collection(db, 'projects'), 
       where('createdBy.uid', '==', currentUser.uid),
@@ -328,10 +314,22 @@ const loadDashboardData = async () => {
     const myProjectsSnapshot = await getDocs(myProjectsQuery);
     myProjects.value = myProjectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-    // Fetch user's interested projects
     const userDocRef = doc(db, 'users', currentUser.uid);
     const userDocSnap = await getDoc(userDocRef);
 
+   const allProjectsQuery = query(collection(db, 'projects'));
+    const allProjectsSnapshot = await getDocs(allProjectsQuery);
+    
+    const interestedFromProjects = allProjectsSnapshot.docs
+      .filter(projectDoc => {
+        const projectData = projectDoc.data();
+        return projectData.interested && 
+               projectData.interested.some(user => user.uid === currentUser.uid);
+      })
+      .map(doc => ({ id: doc.id, ...doc.data() }));
+    
+   
+    let interestedFromUser = [];
     if (userDocSnap.exists()) {
       const userData = userDocSnap.data();
       const interestedProjectIds = userData.interestedProjects || [];
@@ -339,19 +337,21 @@ const loadDashboardData = async () => {
       if (interestedProjectIds.length > 0) {
         const projectPromises = interestedProjectIds.map(id => getDoc(doc(db, 'projects', id)));
         const projectSnapshots = await Promise.all(projectPromises);
-        interestedProjects.value = projectSnapshots
+        interestedFromUser = projectSnapshots
           .filter(snap => snap.exists())
           .map(snap => ({ id: snap.id, ...snap.data() }));
       }
     }
+    
+    const combinedInterested = [...interestedFromProjects, ...interestedFromUser];
+    interestedProjects.value = Array.from(new Map(
+      combinedInterested.map(project => [project.id, project])
+    ).values());
 
-    // Generate recent activity (in a real app, you'd fetch this from Firestore)
     generateRecentActivity();
     
-    // Extract recent discussions from all projects
     extractRecentDiscussions();
     
-    // Calculate total comments/discussions
     calculateTotalComments();
 
   } catch (err) {
@@ -362,7 +362,6 @@ const loadDashboardData = async () => {
   }
 };
 
-// Calculate total number of comments across all projects
 const calculateTotalComments = () => {
   let count = 0;
   myProjects.value.forEach(project => {
@@ -374,11 +373,9 @@ const calculateTotalComments = () => {
   totalComments.value = count;
 };
 
-// Extract recent discussions from all projects
 const extractRecentDiscussions = () => {
   const discussions = [];
   
-  // From my projects
   myProjects.value.forEach(project => {
     if (project.discussions?.length) {
       project.discussions.forEach(discussion => {
@@ -391,7 +388,6 @@ const extractRecentDiscussions = () => {
     }
   });
   
-  // From interested projects
   interestedProjects.value.forEach(project => {
     if (project.discussions?.length) {
       project.discussions.forEach(discussion => {
@@ -404,16 +400,13 @@ const extractRecentDiscussions = () => {
     }
   });
   
-  // Sort by date (newest first) and take the most recent 5
   discussions.sort((a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis());
   recentDiscussions.value = discussions.slice(0, 5);
 };
 
-// Generate sample activity for the timeline
 const generateRecentActivity = () => {
   const activities = [];
   
-  // Add activities based on actual projects
   if (myProjects.value.length > 0) {
     myProjects.value.slice(0, 3).forEach(project => {
       activities.push({
@@ -425,19 +418,17 @@ const generateRecentActivity = () => {
     });
   }
   
-  // Add activities based on interested projects
   if (interestedProjects.value.length > 0) {
     interestedProjects.value.slice(0, 2).forEach(project => {
       activities.push({
         type: 'interest',
         description: `You expressed interest in "${project.title}"`,
-        time: project.createdAt, // Ideally, you'd track when interest was expressed
+        time: project.createdAt, 
         link: `/project/${project.id}`
       });
     });
   }
   
-  // Add discussion activities
   if (recentDiscussions.value.length > 0) {
     recentDiscussions.value.slice(0, 2).forEach(discussion => {
       activities.push({
@@ -449,12 +440,10 @@ const generateRecentActivity = () => {
     });
   }
   
-  // Sort by time (newest first)
   activities.sort((a, b) => b.time?.toMillis() - a.time?.toMillis());
   recentActivity.value = activities.slice(0, 5);
 };
 
-// Helper functions for timeline
 const getActivityIcon = (type) => {
   switch (type) {
     case 'create': return 'pi pi-plus';
@@ -473,7 +462,6 @@ const getActivityIconClass = (type) => {
   }
 };
 
-// Navigation functions
 const goToCreateProject = () => {
   router.push('/project/create');
 };
@@ -492,7 +480,6 @@ const navigateTo = (path) => {
 
 // Chart data
 const activityChartData = computed(() => {
-  // In a real app, you would fetch actual data
   return {
     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
     datasets: [
@@ -538,9 +525,7 @@ const activityChartOptions = {
   }
 };
 
-// Skills doughnut chart data
 const skillsChartData = computed(() => {
-  // Extract all skills from projects and count occurrences
   const skillsMap = {};
   myProjects.value.forEach(project => {
     if (project.skills?.length) {
@@ -550,7 +535,6 @@ const skillsChartData = computed(() => {
     }
   });
   
-  // Convert to chart format
   const labels = Object.keys(skillsMap);
   const data = Object.values(skillsMap);
   const backgroundColors = [
@@ -586,7 +570,6 @@ const skillsChartOptions = {
   cutout: '70%'
 };
 
-// Formatting helpers
 const formatDate = (timestamp) => {
   if (!timestamp) return '';
   const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -614,14 +597,12 @@ const formatTimeAgo = (timestamp) => {
   }
 };
 
-// Load data on component mount
 onMounted(() => {
   loadDashboardData();
 });
 </script>
 
 <style scoped>
-/* Base Styles */
 .dashboard-container {
   max-width: 1400px;
   margin: 0 auto;
@@ -665,7 +646,6 @@ onMounted(() => {
   margin-top: 0.75rem;
 }
 
-/* Summary Stats Section */
 .summary-stats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -736,7 +716,6 @@ onMounted(() => {
   color: #6b7280;
 }
 
-/* Chart Section */
 .chart-section {
   margin-bottom: 1.5rem;
 }
@@ -745,14 +724,12 @@ onMounted(() => {
   height: 18rem;
 }
 
-/* Card Header Styles */
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-/* Main Content Grid */
 .main_content {
   display: flex;
   flex-direction: column;
@@ -761,7 +738,6 @@ onMounted(() => {
   margin-bottom: 1.5rem;
 }
 
-/* Projects Table Styles */
 .project-name {
   display: flex;
   align-items: center;
@@ -797,7 +773,6 @@ onMounted(() => {
   gap: 0.5rem;
 }
 
-/* Empty State Styling */
 .empty-state {
   padding: 2rem 0;
 }
@@ -813,7 +788,6 @@ onMounted(() => {
   margin-bottom: 0.75rem;
 }
 
-/* Interested Projects List */
 .interested-list {
   list-style: none;
   padding: 0;
@@ -854,53 +828,46 @@ onMounted(() => {
   margin-top: 0.75rem;
 }
 
-/* Activity & Discussions Grid */
 .activity-discussion {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
 }
 
-/* Timeline Styling */
 .activity-card :deep(.p-card-content) {
   padding: 1rem;
 }
 
-/* Style the timeline marker */
 :deep(.p-timeline .p-timeline-event-marker) {
-    border: none; /* Remove default border */
-    position: relative; /* Ensure marker is positioned correctly */
-    /* Adjust left position if needed based on alignment */
+    border: none; 
+    position: relative; 
 }
 
-/* Style the timeline connector */
 :deep(.p-timeline .p-timeline-event-connector) {
     background-color: #e5e7eb; /* gray-200 */
     width: 2px;
 }
 
-/* Hide the opposite content area for left/right alignment */
 :deep(.p-timeline-left .p-timeline-event-opposite),
 :deep(.p-timeline-right .p-timeline-event-opposite) {
-    display: none; /* Completely hide the opposite div */
+    display: none; 
 }
 
-/* Adjust content padding when opposite is hidden */
 :deep(.p-timeline-left .p-timeline-event-content),
 :deep(.p-timeline-right .p-timeline-event-content) {
-    padding-left: 1rem; /* Ensure consistent padding */
-    padding-right: 0; /* Remove padding on the side where opposite used to be */
+    padding-left: 1rem; 
+    padding-right: 0; 
 }
 
 .timeline-icon {
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 2.25rem; /* Slightly smaller */
+  width: 2.25rem; 
   height: 2.25rem;
   border-radius: 50%;
-  margin-top: 0.25rem; /* Align better with text */
-  z-index: 1; /* Ensure marker is above connector */
+  margin-top: 0.25rem; 
+  z-index: 1; 
 }
 
 .create-activity {
@@ -943,7 +910,6 @@ onMounted(() => {
   text-decoration: underline;
 }
 
-/* Discussion Item Styling */
 .discussion-item {
   padding: 0.75rem 0;
   border-bottom: 1px solid #f3f4f6;
@@ -990,7 +956,6 @@ onMounted(() => {
   font-style: italic;
 }
 
-/* Card Styles */
 :deep(.p-card) {
   border-radius: 0.5rem;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
@@ -1004,4 +969,3 @@ onMounted(() => {
 }
 
 </style>
-```

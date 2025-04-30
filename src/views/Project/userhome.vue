@@ -1,15 +1,12 @@
 <template>
     <div class="dashboard-container">
-      <!-- Header -->
       <div class="dashboard-header">
         <h1 class="dashboard-title">Welcome {{ currentUser?.displayName || 'User' }}</h1>
       </div>
   
-      <!-- Your Projects Section -->
       <section class="dashboard-section">
         <h2 class="section-title">Your Projects</h2>
         <div class="project-cards">
-          <!-- Created Projects -->
           <div v-if="createdProjects.length > 0" class="project-grid">
             <Card v-for="project in createdProjects" :key="project.id" class="project-card">
               <template #header>
@@ -42,7 +39,6 @@
         </div>
       </section>
   
-      <!-- Quick Stats Section -->
       <section class="dashboard-section">
         <h2 class="section-title">Quick Stats</h2>
         <div class="stats-grid">
@@ -78,7 +74,6 @@
         </div>
       </section>
   
-      <!-- Recent Activity Section -->
       <section class="dashboard-section">
         <h2 class="section-title">Recent Activity</h2>
         <div class="activity-list">
@@ -121,14 +116,12 @@
   const loading = ref(true);
   
   onMounted(() => {
-    // Listen to auth state changes
     const unsubscribe = auth.onAuthStateChanged(user => {
       if (user) {
         currentUser.value = { uid: user.uid, displayName: user.displayName };
         fetchUserData();
       } else {
         currentUser.value = null;
-        // Handle logged out state, maybe redirect
         router.push('/login');
       }
       loading.value = false;
@@ -140,16 +133,13 @@
     loading.value = true;
   
     try {
-      // Fetch User Data
       const userDoc = await getDoc(doc(db, 'users', currentUser.value.uid));
       if (userDoc.exists()) {
         userData.value = userDoc.data();
       } else {
-        // Handle case where user doc might not exist yet
         userData.value = { displayName: currentUser.value.displayName };
       }
   
-      // Fetch Created Projects
       const createdQuery = query(
         collection(db, 'projects'),
         where('createdBy.uid', '==', currentUser.value.uid),
@@ -158,20 +148,16 @@
       const createdSnap = await getDocs(createdQuery);
       createdProjects.value = createdSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
   
-      // Add project status for the UI
       createdProjects.value = createdProjects.value.map(project => {
-        // Add status based on project properties
         if (project.status) {
           return project;
         } else {
-          // Default status - could be based on other properties
           const status = project.completed ? 'Completed' : 
                         project.draft ? 'Draft' : 'Active';
           return { ...project, status };
         }
       });
   
-      // Fetch Interested Projects (more efficiently)
       if (userData.value?.interestedProjects?.length > 0) {
           const interestedIds = userData.value.interestedProjects;
           const interestedPromises = interestedIds.map(id => getDoc(doc(db, 'projects', id)));
@@ -183,32 +169,24 @@
           interestedProjects.value = [];
       }
   
-      // Fetch dashboard statistics
       try {
-        // Get active users count (total number of users in the users collection)
         const usersSnapshot = await getDocs(collection(db, 'users'));
         const activeUsersCount = usersSnapshot.size;
         
-        // Get all projects to calculate statistics
         const projectsSnapshot = await getDocs(collection(db, 'projects'));
         const allProjects = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         
-        // Count completed projects (projects with status "Completed" or completed flag)
         const completedProjects = allProjects.filter(project => 
           project.status === 'Completed' || project.completed === true
         ).length;
         
-        // Count pending tasks (from all projects)
         let pendingTasksCount = 0;
         allProjects.forEach(project => {
-          // Check if project has tasks array
           if (project.tasks && Array.isArray(project.tasks)) {
-            // Count tasks that are not completed
             pendingTasksCount += project.tasks.filter(task => !task.completed).length;
           }
         });
         
-        // Store the stats in userData for display
         userData.value = {
           ...userData.value,
           activeUsers: activeUsersCount,
@@ -219,7 +197,6 @@
         console.error("Error fetching statistics:", error);
       }
   
-      // Fetch Recent Activity
       const activity = [];
       const projectIds = new Set([
           ...createdProjects.value.map(p => p.id),
@@ -243,20 +220,19 @@
           });
       });
   
-      // Sort activity by time and limit
+     
       recentActivity.value = activity
           .sort((a, b) => b.time.getTime() - a.time.getTime())
           .slice(0, 5);
   
     } catch (error) {
         console.error("Error fetching user home data:", error);
-        // Handle error state in UI if needed
+     
     } finally {
         loading.value = false;
     }
   };
   
-  // Helper methods for project cards
   const getProjectStatus = (project) => {
     return project.status || 'Active';
   };
@@ -275,7 +251,6 @@
     }
   };
   
-  // Navigation functions
   const goToCreateProject = () => {
     router.push('/project/create');
   };
@@ -296,7 +271,7 @@
     router.push('/discover');
   };
   
-  // Formatting helpers
+  // format
   const formatDate = (timestamp) => {
     if (!timestamp) return 'N/A';
     try {
@@ -358,7 +333,6 @@
     margin-bottom: 1.5rem;
   }
   
-  /* Project Cards */
   .project-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -415,7 +389,6 @@
     padding: 0.5rem 1rem 1rem;
   }
   
-  /* Stats Grid */
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -471,7 +444,6 @@
     color: #212529;
   }
   
-  /* Activity List */
   .activity-list {
     background-color: #ffffff;
     border-radius: 0.5rem;
@@ -510,7 +482,6 @@
     font-weight: 500;
   }
   
-  /* Empty states */
   .empty-state {
     display: flex;
     flex-direction: column;
